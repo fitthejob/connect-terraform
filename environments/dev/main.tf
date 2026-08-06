@@ -13,17 +13,16 @@ module "lambda" {
   source                                 = "../../modules/lambda"
   s3_bucket_lambda_artifacts             = var.s3_bucket_lambda_artifacts
   lambda_eligibility_check_function_name = var.lambda_eligibility_check_function_name
-  lambda_eligibility_check_s3_key        = var.lambda_eligibility_check_s3_key
+  lambda_eligibility_check_s3_key        = "eligibility-check/dev/eligibility-check-${var.artifact_sha}.zip"
   connect_instance_id                    = module.connect.connect_instance_id
   customer_profiles_domain_name          = var.customer_profiles_domain_name
   layer_arn                              = module.layers.shared_deps_layer_arn
-
 }
 
 module "layers" {
   source                     = "../../modules/layers"
   s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
-  shared_deps_layer_s3_key   = var.shared_deps_layer_s3_key
+  shared_deps_layer_s3_key   = "shared-deps/dev/shared-deps-${var.artifact_sha}.zip"
 }
 
 

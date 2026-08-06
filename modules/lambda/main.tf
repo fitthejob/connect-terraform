@@ -25,6 +25,7 @@ resource "aws_iam_role_policy_attachment" "eligibility_check_basic" {
 
 # Define execution policy for getting and searching Amazon Connect customer profiles
 resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
+  name = "lambda-eligibility-check-customer-profiles-policy"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
