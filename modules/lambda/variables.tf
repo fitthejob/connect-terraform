@@ -1,4 +1,9 @@
 
+variable "environment" {
+  description = "Environment name (dev, staging, prod) — suffixed onto IAM role/policy names so all three environments can coexist in the same AWS account"
+  type        = string
+}
+
 variable "s3_bucket_lambda_artifacts" {
   description = "S3 bucket for Amazon Connect Lambdas"
   type        = string

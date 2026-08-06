@@ -42,6 +42,12 @@ variable "queue_billing_max_contacts" {
   default     = 10
 }
 
+variable "queue_general_max_contacts" {
+  description = "Max contacts for the general queue"
+  type        = number
+  default     = 10
+}
+
 variable "s3_bucket_call_recordings" {
   description = "S3 bucket for call recordings"
   type        = string
@@ -64,4 +70,16 @@ variable "lambda_eligibility_check_function_name" {
   type        = string
 }
 
+# layers vars
 
+variable "shared_deps_layer_s3_key" {
+  description = "S3 key for the shared dependencies layer zip"
+  type        = string
+}
+
+# lex vars
+
+variable "lex_bot_name" {
+  description = "Name for the main menu Lex bot instance"
+  type        = string
+}

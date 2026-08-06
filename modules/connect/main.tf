@@ -1,5 +1,5 @@
 resource "aws_connect_queue" "claims" {
-  name                  = "queue-claims"
+  name                  = "queue-claims-${var.environment}"
   description           = "Claims Queue"
   instance_id           = data.aws_connect_instance.main.id
   hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
@@ -10,7 +10,7 @@ resource "aws_connect_queue" "claims" {
 }
 
 resource "aws_connect_queue" "benefits" {
-  name                  = "queue-benefits"
+  name                  = "queue-benefits-${var.environment}"
   description           = "Benefits Queue"
   instance_id           = data.aws_connect_instance.main.id
   hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
@@ -21,7 +21,7 @@ resource "aws_connect_queue" "benefits" {
 }
 
 resource "aws_connect_queue" "authorizations" {
-  name                  = "queue-authorizations"
+  name                  = "queue-authorizations-${var.environment}"
   description           = "authorizations Queue"
   instance_id           = data.aws_connect_instance.main.id
   hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
@@ -32,7 +32,7 @@ resource "aws_connect_queue" "authorizations" {
 }
 
 resource "aws_connect_queue" "billing" {
-  name                  = "queue-billing"
+  name                  = "queue-billing-${var.environment}"
   description           = "Billing Queue"
   instance_id           = data.aws_connect_instance.main.id
   hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
@@ -43,7 +43,7 @@ resource "aws_connect_queue" "billing" {
 }
 
 resource "aws_connect_queue" "general" {
-  name                  = "queue-general"
+  name                  = "queue-general-${var.environment}"
   description           = "General Queue"
   instance_id           = data.aws_connect_instance.main.id
   hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
@@ -55,7 +55,7 @@ resource "aws_connect_queue" "general" {
 
 resource "aws_connect_routing_profile" "basic" {
   instance_id = data.aws_connect_instance.main.id
-  name        = "routing-profile-basic"
+  name        = "routing-profile-basic-${var.environment}"
   description = "Basic Routing Profile"
   media_concurrencies {
     concurrency = 1
@@ -96,7 +96,7 @@ resource "aws_connect_routing_profile" "basic" {
 
 resource "aws_connect_contact_flow" "main_inbound" {
   instance_id = data.aws_connect_instance.main.id
-  name        = "Main-Inbound"
+  name        = "Main-Inbound-${var.environment}"
   description = "Main inbound contact flow"
   type        = "CONTACT_FLOW"
   content     = file("${path.module}/contact_flows/main_inbound.json")
@@ -113,7 +113,7 @@ resource "aws_connect_contact_flow" "main_inbound" {
 # generation + validation flow this supports.
 resource "aws_connect_contact_flow" "validation_sandbox" {
   instance_id = data.aws_connect_instance.main.id
-  name        = "Validation-Sandbox"
+  name        = "Validation-Sandbox-${var.environment}"
   description = "CI target for validating generated flow JSON against the real Connect API before deploying to Main-Inbound"
   type        = "CONTACT_FLOW"
   content     = file("${path.module}/contact_flows/validation_sandbox.json")
