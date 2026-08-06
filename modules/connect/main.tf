@@ -31,6 +31,17 @@ resource "aws_connect_queue" "authorizations" {
   }
 }
 
+resource "aws_connect_queue" "billing" {
+  name                  = "queue-billing"
+  description           = "Billing Queue"
+  instance_id           = data.aws_connect_instance.main.id
+  hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
+  max_contacts          = var.queue_billing_max_contacts
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "aws_connect_routing_profile" "basic" {
   instance_id = data.aws_connect_instance.main.id
   name        = "routing-profile-basic"
@@ -58,6 +69,12 @@ resource "aws_connect_routing_profile" "basic" {
     delay    = 0
     channel  = "VOICE"
   }
+  queue_configs {
+    queue_id = aws_connect_queue.billing.queue_id
+    priority = 4
+    delay    = 0
+    channel  = "VOICE"
+  }
 }
 
 resource "aws_connect_contact_flow" "main_inbound" {
@@ -70,10 +87,4 @@ resource "aws_connect_contact_flow" "main_inbound" {
     prevent_destroy = true
   }
 }
-
-resource "aws_connect_lambda_function_association" "eligibility_check" {
-  instance_id  = data.aws_connect_instance.main.id
-  function_arn = var.lambda_eligibility_check_function_arn
-}
-
 

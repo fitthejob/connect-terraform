@@ -1,34 +1,106 @@
 name: Deploy Dev
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 jobs:
-    deploy-dev:
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: environments/dev
-        permissions:
-            id-token: write
-            contents: read
-        steps:
-            - name: pr-checks
-              uses: actions/checkout@v4
+  build-artifacts:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        function: [eligibility-check]
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
 
-            - name: OIDC Authentication
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-                  aws-region: us-east-1
+      - name: OIDC Authentication
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
-            - name: Terraform Init
-              run: terraform init
+      - name: Install & build ${{ matrix.function }}
+        working-directory: modules/lambda/src/${{ matrix.function }}
+        run: |
+          npm ci
+          npm run build
 
-            - name: Terraform Apply
-              run: terraform apply -auto-approve
+      - name: Zip ${{ matrix.function }}
+        working-directory: modules/lambda/src/${{ matrix.function }}
+        run: zip -r ${{ matrix.function }}.zip dist
+
+      - name: Upload ${{ matrix.function }} artifact
+        working-directory: modules/lambda/src/${{ matrix.function }}
+        run: |
+          aws s3 cp ${{ matrix.function }}.zip \
+            s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/${{ matrix.function }}/dev/${{ matrix.function }}-${{ github.sha }}.zip
+
+  build-layer:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: OIDC Authentication
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Install layer deps
+        working-directory: modules/layers/src/nodejs
+        run: npm ci --omit=dev
+
+      - name: Zip layer
+        working-directory: modules/layers/src
+        run: zip -r shared-deps.zip nodejs
+
+      - name: Upload layer artifact
+        working-directory: modules/layers/src
+        run: |
+          aws s3 cp shared-deps.zip \
+            s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/shared-deps/dev/shared-deps-${{ github.sha }}.zip
+
+  deploy-dev:
+    needs: [build-artifacts, build-layer]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/dev
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: pr-checks
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: OIDC Authentication
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="artifact_sha=${{ github.sha }}"
