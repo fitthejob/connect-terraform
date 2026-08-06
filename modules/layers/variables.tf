@@ -1,3 +1,8 @@
+variable "environment" {
+  description = "Environment name (dev, staging, prod) — suffixed onto the layer name so all three environments can coexist in the same AWS account"
+  type        = string
+}
+
 variable "s3_bucket_lambda_artifacts" {
   description = "Layer zips bucket"
   type        = string

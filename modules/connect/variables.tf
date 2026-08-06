@@ -1,3 +1,8 @@
+variable "environment" {
+  description = "Environment name (dev, staging, prod) — suffixed onto every named Connect resource so all three environments can coexist on the same shared Connect instance"
+  type        = string
+}
+
 variable "aws_connect_alias" {
   description = "AWS Connect instance alias"
   type        = string

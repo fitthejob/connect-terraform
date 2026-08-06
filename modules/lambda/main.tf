@@ -1,7 +1,7 @@
 
 # IAM role for eligibility check Lambda - Assume role via STS
 resource "aws_iam_role" "eligibility_check" {
-  name = "lambda-eligibility-check-role"
+  name = "lambda-eligibility-check-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "eligibility_check_basic" {
 
 # Define execution policy for getting and searching Amazon Connect customer profiles
 resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
-  name = "lambda-eligibility-check-customer-profiles-policy"
+  name = "lambda-eligibility-check-customer-profiles-policy-${var.environment}"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

@@ -1,5 +1,6 @@
 module "connect" {
   source                            = "../../modules/connect"
+  environment                       = "dev"
   aws_connect_alias                 = var.aws_connect_alias
   hours_of_operation_name           = var.hours_of_operation_name
   s3_bucket_call_recordings         = var.s3_bucket_call_recordings
@@ -18,6 +19,7 @@ module "lex" {
 
 module "lambda" {
   source                                 = "../../modules/lambda"
+  environment                            = "dev"
   s3_bucket_lambda_artifacts             = var.s3_bucket_lambda_artifacts
   lambda_eligibility_check_function_name = var.lambda_eligibility_check_function_name
   lambda_eligibility_check_s3_key        = "eligibility-check/dev/eligibility-check-${var.artifact_sha}.zip"
@@ -28,6 +30,7 @@ module "lambda" {
 
 module "layers" {
   source                     = "../../modules/layers"
+  environment                = "dev"
   s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
   shared_deps_layer_s3_key   = "shared-deps/dev/shared-deps-${var.artifact_sha}.zip"
 }
