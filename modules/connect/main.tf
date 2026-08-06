@@ -42,6 +42,17 @@ resource "aws_connect_queue" "billing" {
   }
 }
 
+resource "aws_connect_queue" "general" {
+  name                  = "queue-general"
+  description           = "General Queue"
+  instance_id           = data.aws_connect_instance.main.id
+  hours_of_operation_id = data.aws_connect_hours_of_operation.basic.hours_of_operation_id
+  max_contacts          = var.queue_general_max_contacts
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "aws_connect_routing_profile" "basic" {
   instance_id = data.aws_connect_instance.main.id
   name        = "routing-profile-basic"
@@ -75,6 +86,12 @@ resource "aws_connect_routing_profile" "basic" {
     delay    = 0
     channel  = "VOICE"
   }
+  queue_configs {
+    queue_id = aws_connect_queue.general.queue_id
+    priority = 5
+    delay    = 0
+    channel  = "VOICE"
+  }
 }
 
 resource "aws_connect_contact_flow" "main_inbound" {
@@ -88,3 +105,30 @@ resource "aws_connect_contact_flow" "main_inbound" {
   }
 }
 
+# Target for CI to push freshly-generated main-inbound flow JSON to via the
+# AWS CLI (UpdateContactFlowContent) before it's trusted enough to apply to
+# main_inbound itself. Terraform only owns this flow's existence and a
+# permanently-safe stub; the actual validation push happens out-of-band in
+# CI. See scripts/main-inbound-flow.ts and docs/superpowers/specs/ for the
+# generation + validation flow this supports.
+resource "aws_connect_contact_flow" "validation_sandbox" {
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Validation-Sandbox"
+  description = "CI target for validating generated flow JSON against the real Connect API before deploying to Main-Inbound"
+  type        = "CONTACT_FLOW"
+  content     = file("${path.module}/contact_flows/validation_sandbox.json")
+}
+
+# aws_connect_bot_association only supports Lex V1 bots in this provider
+# (no lex_v2_bot block — checked schemas directly, and HashiCorp's tracking
+# issue for V2 support, github.com/hashicorp/terraform-provider-aws/issues/30869,
+# remains open/unimplemented). Associate via the AWS CLI instead. The script
+# is idempotent, so re-running it on every plan/apply is safe.
+data "external" "lex_bot_association" {
+  program = ["bash", "${path.module}/scripts/associate_lex_bot.sh"]
+
+  query = {
+    instance_id = data.aws_connect_instance.main.id
+    alias_arn   = var.aws_lex_bot_alias_arn
+  }
+}

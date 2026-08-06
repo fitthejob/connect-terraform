@@ -7,6 +7,13 @@ module "connect" {
   queue_benefits_max_contacts       = var.queue_benefits_max_contacts
   queue_authorizations_max_contacts = var.queue_authorizations_max_contacts
   queue_billing_max_contacts        = var.queue_billing_max_contacts
+  queue_general_max_contacts        = var.queue_general_max_contacts
+  aws_lex_bot_alias_arn             = module.lex.bot_alias_arn
+}
+
+module "lex" {
+  source   = "../../modules/lex"
+  bot_name = var.lex_bot_name
 }
 
 module "lambda" {
