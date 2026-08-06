@@ -1,5 +1,5 @@
 name: Ping
-# trigger test 3 - public repo test
+# trigger test 4
 on: push
 jobs:
   ping:
