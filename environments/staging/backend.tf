@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "amazon-connect-tfstate-nevs-cloud-dev"
+    bucket       = "amazon-connect-tfstate-nevs-cloud-prod"
     key          = "connect/staging/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
