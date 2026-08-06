@@ -24,13 +24,23 @@ output "queue_benefits_arn" {
 }
 
 output "queue_authorizations_id" {
-  description = "Claims Queue ID"
+  description = "Authorizations Queue ID"
   value       = aws_connect_queue.authorizations.queue_id
 }
 
 output "queue_authorizations_arn" {
-  description = "authorizations Queue ARN"
+  description = "Authorizations Queue ARN"
   value       = aws_connect_queue.authorizations.arn
+}
+
+output "queue_billing_id" {
+  description = "Billing Queue ID"
+  value       = aws_connect_queue.billing.queue_id
+}
+
+output "queue_billing_arn" {
+  description = "Billing Queue ARN"
+  value       = aws_connect_queue.billing.arn
 }
 
 output "routing_profile_basic_id" {
