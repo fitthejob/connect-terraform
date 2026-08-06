@@ -6,3 +6,8 @@
 .terraform.lock.hcl
 override.tf
 
+**/node_modules
+**/iam_json/
+**/dist/
+
+CLAUDE.md

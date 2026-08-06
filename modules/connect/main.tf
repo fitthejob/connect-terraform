@@ -88,9 +88,3 @@ resource "aws_connect_contact_flow" "main_inbound" {
   }
 }
 
-resource "aws_connect_lambda_function_association" "eligibility_check" {
-  instance_id  = data.aws_connect_instance.main.id
-  function_arn = var.lambda_eligibility_check_function_arn
-}
-
-

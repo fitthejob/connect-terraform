@@ -26,9 +26,10 @@ variable "queue_authorizations_max_contacts" {
   default     = 10
 }
 
-variable "lambda_eligibility_check_function_arn" {
-  description = "ARN of the Lambda eligibility check function"
-  type        = string
+variable "queue_billing_max_contacts" {
+  description = "Max contacts for the billing queue"
+  type        = number
+  default     = 10
 }
 
 variable "s3_bucket_call_recordings" {
