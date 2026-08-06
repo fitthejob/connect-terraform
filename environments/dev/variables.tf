@@ -34,6 +34,12 @@ variable "queue_billing_max_contacts" {
   default     = 10
 }
 
+variable "queue_general_max_contacts" {
+  description = "Max contacts for the general queue"
+  type        = number
+  default     = 10
+}
+
 variable "s3_bucket_call_recordings" {
   description = "S3 bucket for call recordings"
   type        = string
@@ -67,6 +73,13 @@ variable "compatible_runtimes" {
 
 variable "artifact_sha" {
   description = "Git SHA used to key build artifacts in S3"
+  type        = string
+}
+
+# lex vars
+
+variable "lex_bot_name" {
+  description = "Name for the main menu Lex bot instance"
   type        = string
 }
 

@@ -1,0 +1,18 @@
+{
+  "name": "connect-terraform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Flow-authoring tooling for the mini-connect Terraform infrastructure",
+  "scripts": {
+    "generate:main-inbound-flow": "node --loader ts-node/esm scripts/main-inbound-flow.ts"
+  },
+  "dependencies": {
+    "@fitthejob/connect-flow-builder": "^0.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^22.0.0"
+  }
+}

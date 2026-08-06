@@ -32,7 +32,18 @@ variable "queue_billing_max_contacts" {
   default     = 10
 }
 
+variable "queue_general_max_contacts" {
+  description = "Max contacts for the general queue"
+  type        = number
+  default     = 10
+}
+
 variable "s3_bucket_call_recordings" {
   description = "S3 bucket for call recordings"
+  type        = string
+}
+
+variable "aws_lex_bot_alias_arn" {
+  description = "ARN of the Lex bot alias to associate with this Connect instance"
   type        = string
 }

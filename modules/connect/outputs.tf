@@ -43,7 +43,22 @@ output "queue_billing_arn" {
   value       = aws_connect_queue.billing.arn
 }
 
+output "queue_general_id" {
+  description = "General Queue ID"
+  value       = aws_connect_queue.general.queue_id
+}
+
+output "queue_general_arn" {
+  description = "General Queue ARN"
+  value       = aws_connect_queue.general.arn
+}
+
 output "routing_profile_basic_id" {
   description = "Basic Routing Profile ID"
   value       = aws_connect_routing_profile.basic.routing_profile_id
+}
+
+output "validation_sandbox_contact_flow_id" {
+  description = "Contact flow ID of the CI validation sandbox flow"
+  value       = aws_connect_contact_flow.validation_sandbox.contact_flow_id
 }
