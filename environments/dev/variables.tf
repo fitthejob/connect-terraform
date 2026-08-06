@@ -52,11 +52,6 @@ variable "lambda_eligibility_check_function_name" {
   type        = string
 }
 
-variable "lambda_eligibility_check_s3_key" {
-  description = "S3 key for the eligibility check Lambda artifact zip"
-  type        = string
-}
-
 variable "customer_profiles_domain_name" {
   description = "Amazon Connect Customer Profiles Domain name"
   type        = string
@@ -64,14 +59,14 @@ variable "customer_profiles_domain_name" {
 
 # layers vars
 
-variable "shared_deps_layer_s3_key" {
-  description = "S3 key for the shared dependencies layer zip"
-  type        = string
-}
-
 variable "compatible_runtimes" {
   description = "Compatible runtimes for the shared dependencies layer"
   type        = list(string)
   default     = ["nodejs18.x"]
+}
+
+variable "artifact_sha" {
+  description = "Git SHA used to key build artifacts in S3"
+  type        = string
 }
 
