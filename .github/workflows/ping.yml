@@ -1,8 +1,0 @@
-name: Ping
-# trigger test 4
-on: push
-jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "hello"
