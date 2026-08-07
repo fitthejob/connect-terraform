@@ -58,6 +58,22 @@ const flow = new FlowBuilder("CallbackOffer")
   .add(endModule)
   .build();
 
+// CONTACT_FLOW_MODULE content requires a Settings block with Success/Error
+// transition declarations. Connect rejects the content without it even
+// though it's not needed at runtime. Mirrors the same patch in
+// connect-flow-builder's render-flow-catalog.ts.
+const definition = flow.toConnectDefinition() as unknown as Record<string, unknown>;
+if (!definition.Settings) {
+  definition.Settings = {
+    InputParameters: [],
+    OutputParameters: [],
+    Transitions: [
+      { DisplayName: "Success", ReferenceName: "Success", Description: "" },
+      { DisplayName: "Error", ReferenceName: "Error", Description: "" },
+    ],
+  };
+}
+
 const outputPath = process.env.FLOW_OUTPUT_PATH
   ? resolve(process.env.FLOW_OUTPUT_PATH)
   : resolve(
@@ -65,5 +81,5 @@ const outputPath = process.env.FLOW_OUTPUT_PATH
       "../modules/connect/contact_flows/callback_offer.json",
     );
 
-writeFileSync(outputPath, flow.toJsonString());
+writeFileSync(outputPath, JSON.stringify(definition, null, 2));
 console.log(`Wrote ${outputPath}`);
