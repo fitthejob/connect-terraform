@@ -112,9 +112,10 @@ resource "aws_lambda_function" "eligibility_check" {
 
   kms_key_arn = data.aws_kms_key.lambda_default.arn
 
-  # Caps concurrent executions so a spike in calls can't consume the
-  # account's entire concurrency pool and starve other Lambdas.
-  reserved_concurrent_executions = 2
+  # No reserved_concurrent_executions: this account's total Lambda
+  # concurrency limit is 10 (the AWS minimum), and any reservation here
+  # would violate the requirement to leave at least 10 unreserved. Revisit
+  # once the account's concurrency quota is raised.
 
   dead_letter_config {
     target_arn = aws_sqs_queue.eligibility_check_dlq.arn
