@@ -105,9 +105,51 @@
         },
         "isFriendlyName": true
       },
+      "TransferGeneralSetCallbackQueue": {
+        "position": {
+          "x": 1320,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
       "Disconnect": {
         "position": {
           "x": 1320,
+          "y": 1020
+        },
+        "isFriendlyName": true
+      },
+      "TransferClaimsSetCallbackQueue": {
+        "position": {
+          "x": 1580,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "TransferBenefitsSetCallbackQueue": {
+        "position": {
+          "x": 1580,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "TransferAuthorizationsSetCallbackQueue": {
+        "position": {
+          "x": 1580,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "TransferBillingSetCallbackQueue": {
+        "position": {
+          "x": 1580,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "InvokeCallbackOffer": {
+        "position": {
+          "x": 1580,
           "y": 820
         },
         "isFriendlyName": true
@@ -263,14 +305,33 @@
       "Type": "TransferContactToQueue",
       "Parameters": {},
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "TransferClaimsSetCallbackQueue",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "TransferClaimsSetCallbackQueue",
             "ErrorType": "QueueAtCapacity"
           },
           {
             "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferClaimsSetCallbackQueue",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CallbackQueueId": "abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeCallbackOffer",
+        "Errors": [
+          {
+            "NextAction": "InvokeCallbackOffer",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -297,14 +358,33 @@
       "Type": "TransferContactToQueue",
       "Parameters": {},
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "TransferBenefitsSetCallbackQueue",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "TransferBenefitsSetCallbackQueue",
             "ErrorType": "QueueAtCapacity"
           },
           {
             "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferBenefitsSetCallbackQueue",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CallbackQueueId": "26a7cd43-093a-4a28-aef6-18b2ee9fd943"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeCallbackOffer",
+        "Errors": [
+          {
+            "NextAction": "InvokeCallbackOffer",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -331,14 +411,33 @@
       "Type": "TransferContactToQueue",
       "Parameters": {},
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "TransferAuthorizationsSetCallbackQueue",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "TransferAuthorizationsSetCallbackQueue",
             "ErrorType": "QueueAtCapacity"
           },
           {
             "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferAuthorizationsSetCallbackQueue",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CallbackQueueId": "81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeCallbackOffer",
+        "Errors": [
+          {
+            "NextAction": "InvokeCallbackOffer",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -365,14 +464,33 @@
       "Type": "TransferContactToQueue",
       "Parameters": {},
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "TransferBillingSetCallbackQueue",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "TransferBillingSetCallbackQueue",
             "ErrorType": "QueueAtCapacity"
           },
           {
             "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferBillingSetCallbackQueue",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CallbackQueueId": "ef33ec80-8e64-433b-a099-97fb236d8fdc"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeCallbackOffer",
+        "Errors": [
+          {
+            "NextAction": "InvokeCallbackOffer",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -399,12 +517,47 @@
       "Type": "TransferContactToQueue",
       "Parameters": {},
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "TransferGeneralSetCallbackQueue",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "TransferGeneralSetCallbackQueue",
             "ErrorType": "QueueAtCapacity"
           },
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferGeneralSetCallbackQueue",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CallbackQueueId": "9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeCallbackOffer",
+        "Errors": [
+          {
+            "NextAction": "InvokeCallbackOffer",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "InvokeCallbackOffer",
+      "Type": "InvokeFlowModule",
+      "Parameters": {
+        "FlowModuleId": "PENDING-TERRAFORM-APPLY"
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
           {
             "NextAction": "Disconnect",
             "ErrorType": "NoMatchingError"
