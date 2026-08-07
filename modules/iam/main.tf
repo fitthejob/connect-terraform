@@ -56,26 +56,43 @@ resource "aws_iam_role" "this" {
 data "aws_region" "current" {}
 
 locals {
+  # lambda-* and contact-center-* are this repo's fixed naming prefixes
+  # for every Lambda-owned IAM role/policy and every EventBridge-pipeline
+  # SQS queue respectively -- new Lambdas/queues under these prefixes
+  # (e.g. Phase 1/2's customer-lookup, sms-verification, the EventBridge
+  # pipeline's durable/DLQ queues) don't need a new statement here, unlike
+  # exact per-resource scoping which would need editing on every addition.
   iam_scoped_resources = flatten([
     for env in var.environments : [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/lambda-eligibility-check-role-${env}",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/lambda-eligibility-check-customer-profiles-policy-${env}",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/lambda-*-${env}",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/lambda-*-${env}",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/connect-lex-menu-${env}-role",
     ]
   ])
 
-  # eligibility-check-{env} is this repo's fixed Lambda naming convention
-  # (see environments/*/terraform.tfvars: lambda_eligibility_check_function_name).
+  # Every Lambda function this repo manages is suffixed -{env} (see
+  # environments/*/main.tf's module blocks: eligibility-check-dev,
+  # customer-lookup-dev, routing-decision-dev, sms-verification-dev,
+  # contact-event-publisher-dev, event-metric-subscriber-dev, ...). New
+  # Lambda functions under this suffix convention don't need a new
+  # statement here.
   lambda_scoped_resources = flatten([
     for env in var.environments : [
-      "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:eligibility-check-${env}",
-      "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:eligibility-check-${env}:*",
+      "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:*-${env}",
+      "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:*-${env}:*",
     ]
   ])
 
   sqs_scoped_resources = flatten([
     for env in var.environments : [
-      "arn:aws:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:lambda-eligibility-check-dlq-${env}",
+      "arn:aws:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:lambda-*-${env}",
+      "arn:aws:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:contact-center-*-${env}",
+    ]
+  ])
+
+  dynamodb_scoped_resources = flatten([
+    for env in var.environments : [
+      "arn:aws:dynamodb:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/sms-verification-codes-${env}",
     ]
   ])
 }
@@ -349,6 +366,7 @@ data "aws_iam_policy_document" "deploy_permissions_contact_center" {
       "dynamodb:UpdateTable",
       "dynamodb:UpdateTimeToLive",
       "dynamodb:DescribeTimeToLive",
+      "dynamodb:DescribeContinuousBackups",
       "dynamodb:TagResource",
       "dynamodb:UntagResource",
       "dynamodb:ListTagsOfResource",
@@ -359,7 +377,7 @@ data "aws_iam_policy_document" "deploy_permissions_contact_center" {
       "dynamodb:Query",
       "dynamodb:Scan",
     ]
-    resources = ["*"]
+    resources = local.dynamodb_scoped_resources
   }
 
   statement {
