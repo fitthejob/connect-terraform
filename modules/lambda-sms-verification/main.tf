@@ -17,6 +17,10 @@ resource "aws_dynamodb_table" "verification_codes" {
     attribute_name = "expiresAt"
     enabled        = true
   }
+
+  point_in_time_recovery {
+    enabled = true
+  }
 }
 
 # IAM role for sms-verification Lambda - Assume role via STS
