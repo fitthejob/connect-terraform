@@ -79,6 +79,12 @@ data "aws_iam_policy_document" "deploy_permissions" {
   statement {
     sid    = "ConnectManage"
     effect = "Allow"
+    # connect:Describe*/Get*/List*/Search* are broad-read wildcards covering
+    # dozens of read-only Connect APIs (queues, routing profiles, contact
+    # flows, users, etc.) needed for plan/apply drift detection; enumerating
+    # each concrete action isn't practical and AWS doesn't expose a coarser
+    # read-only managed policy scoped to just this repo's resource types.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     actions = [
       "connect:Describe*",
       "connect:Get*",
@@ -299,14 +305,17 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
   statement {
     sid    = "ConnectReadOnly"
     effect = "Allow"
+    # See ConnectManage in deploy_permissions above — same broad-read
+    # wildcard rationale, deferred as a follow-up rather than done here.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     actions = [
       "connect:Describe*",
       "connect:Get*",
       "connect:List*",
       "connect:Search*",
     ]
-    # See ConnectManage in deploy_permissions above — same instance-ARN
-    # scoping opportunity, deferred as a follow-up rather than done here.
+    # See ConnectManage above — same instance-ARN scoping opportunity,
+    # deferred as a follow-up rather than done here.
     # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
