@@ -53,12 +53,22 @@ resource "aws_iam_role" "this" {
   assume_role_policy = data.aws_iam_policy_document.trust.json
 }
 
+data "aws_region" "current" {}
+
 locals {
   iam_scoped_resources = flatten([
     for env in var.environments : [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/lambda-eligibility-check-role-${env}",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/lambda-eligibility-check-customer-profiles-policy-${env}",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/connect-lex-menu-${env}-role",
+    ]
+  ])
+
+  # eligibility-check-{env} is this repo's fixed Lambda naming convention
+  # (see environments/*/terraform.tfvars: lambda_eligibility_check_function_name).
+  lambda_scoped_resources = flatten([
+    for env in var.environments : [
+      "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:eligibility-check-${env}",
     ]
   ])
 }
@@ -89,29 +99,31 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:DisassociateLambdaFunction",
       "connect:ListLambdaFunctions",
     ]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # Could be scoped to the specific Connect instance ARN
+    # (arn:aws:connect:region:account:instance/instance-id), but modules/iam
+    # doesn't currently take the instance ID/alias as an input — adding that
+    # is a real follow-up, not done here to keep this change to a wildcard
+    # cleanup rather than a new variable + bootstrap wiring change.
     resources = ["*"]
   }
 
   statement {
-    sid    = "LambdaManage"
+    sid    = "LambdaFunctionManage"
     effect = "Allow"
     actions = [
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
       "lambda:GetFunctionCodeSigningConfig",
       "lambda:GetAlias",
-      "lambda:GetLayerVersion",
       "lambda:GetPolicy",
       "lambda:ListVersionsByFunction",
       "lambda:ListAliases",
-      "lambda:ListLayerVersions",
       "lambda:CreateFunction",
       "lambda:UpdateFunctionCode",
       "lambda:UpdateFunctionConfiguration",
       "lambda:DeleteFunction",
       "lambda:PublishVersion",
-      "lambda:PublishLayerVersion",
-      "lambda:DeleteLayerVersion",
       "lambda:CreateAlias",
       "lambda:UpdateAlias",
       "lambda:DeleteAlias",
@@ -120,6 +132,22 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lambda:TagResource",
       "lambda:UntagResource",
     ]
+    resources = local.lambda_scoped_resources
+  }
+
+  statement {
+    sid    = "LambdaLayerManage"
+    effect = "Allow"
+    actions = [
+      "lambda:GetLayerVersion",
+      "lambda:ListLayerVersions",
+      "lambda:PublishLayerVersion",
+      "lambda:DeleteLayerVersion",
+    ]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # Layer version numbers are assigned by AWS on publish and aren't known
+    # ahead of time; scoping to a specific layer-version ARN isn't possible
+    # before the first PublishLayerVersion call.
     resources = ["*"]
   }
 
@@ -185,6 +213,10 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lex:DescribeBotAlias",
       "lex:ListBotAliases",
     ]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # lex:CreateBot's target doesn't exist before the call (the bot ID is
+    # assigned by AWS on creation), so this can't be scoped ahead of a first
+    # apply without an ARN pattern that hasn't been verified here.
     resources = ["*"]
   }
 
@@ -196,6 +228,9 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:DisassociateBot",
       "connect:ListBots",
     ]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # See ConnectManage above — same instance-ARN scoping opportunity,
+    # deferred as a follow-up rather than done here.
     resources = ["*"]
   }
 
@@ -248,9 +283,12 @@ data "aws_iam_policy_document" "deploy_permissions" {
   }
 
   statement {
-    sid       = "CallerIdentityForArnConstruction"
-    effect    = "Allow"
-    actions   = ["sts:GetCallerIdentity"]
+    sid     = "CallerIdentityForArnConstruction"
+    effect  = "Allow"
+    actions = ["sts:GetCallerIdentity"]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # sts:GetCallerIdentity has no resource-level permissions at all — it is
+    # account/caller introspection, not a resource-scoped action.
     resources = ["*"]
   }
 }
@@ -267,22 +305,36 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "connect:List*",
       "connect:Search*",
     ]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # See ConnectManage in deploy_permissions above — same instance-ARN
+    # scoping opportunity, deferred as a follow-up rather than done here.
     resources = ["*"]
   }
 
   statement {
-    sid    = "LambdaReadOnly"
+    sid    = "LambdaFunctionReadOnly"
     effect = "Allow"
     actions = [
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
       "lambda:GetAlias",
-      "lambda:GetLayerVersion",
       "lambda:ListVersionsByFunction",
       "lambda:ListAliases",
-      "lambda:ListLayerVersions",
       "lambda:GetPolicy",
     ]
+    resources = local.lambda_scoped_resources
+  }
+
+  statement {
+    sid    = "LambdaLayerReadOnly"
+    effect = "Allow"
+    actions = [
+      "lambda:GetLayerVersion",
+      "lambda:ListLayerVersions",
+    ]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # See LambdaLayerManage in deploy_permissions above — layer version
+    # numbers aren't known ahead of time.
     resources = ["*"]
   }
 
@@ -297,7 +349,7 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "iam:ListAttachedRolePolicies",
       "iam:ListPolicyVersions",
     ]
-    resources = ["*"]
+    resources = local.iam_scoped_resources
   }
 
   statement {

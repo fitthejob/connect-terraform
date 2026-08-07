@@ -17,10 +17,11 @@ resource "aws_iam_role" "lex_bot" {
 
 data "aws_iam_policy_document" "lex_bot_permissions" {
   statement {
-    effect = "Allow"
-    # tfsec:ignore:aws-iam-no-policy-wildcards - polly:SynthesizeSpeech has no
-    # resource-level permissions; AWS-managed Polly voices aren't ARN-addressable.
-    actions   = ["polly:SynthesizeSpeech"]
+    effect  = "Allow"
+    actions = ["polly:SynthesizeSpeech"]
+    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # polly:SynthesizeSpeech has no resource-level permissions; AWS-managed
+    # Polly voices aren't ARN-addressable.
     resources = ["*"]
   }
 
