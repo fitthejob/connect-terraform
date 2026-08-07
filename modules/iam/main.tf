@@ -69,6 +69,7 @@ locals {
   lambda_scoped_resources = flatten([
     for env in var.environments : [
       "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:eligibility-check-${env}",
+      "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:eligibility-check-${env}:*",
     ]
   ])
 
