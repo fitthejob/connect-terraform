@@ -63,6 +63,11 @@ output "validation_sandbox_contact_flow_id" {
   value       = aws_connect_contact_flow.validation_sandbox.contact_flow_id
 }
 
+output "validation_sandbox_module_id" {
+  description = "Contact flow module ID of the CI validation sandbox module"
+  value       = aws_connect_contact_flow_module.validation_sandbox_module.contact_flow_module_id
+}
+
 output "callback_offer_module_id" {
   description = "Contact flow module ID of the CallbackOffer flow module"
   value       = aws_connect_contact_flow_module.callback_offer.contact_flow_module_id

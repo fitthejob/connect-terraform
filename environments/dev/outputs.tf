@@ -3,6 +3,11 @@ output "validation_sandbox_contact_flow_id" {
   value       = module.connect.validation_sandbox_contact_flow_id
 }
 
+output "validation_sandbox_module_id" {
+  description = "Contact flow module ID of the CI validation sandbox module"
+  value       = module.connect.validation_sandbox_module_id
+}
+
 output "connect_instance_id" {
   description = "Amazon Connect instance ID"
   value       = module.connect.connect_instance_id
