@@ -1,12 +1,421 @@
 {
   "Version": "2019-10-30",
-  "StartAction": "start",
+  "StartAction": "Greeting",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 20,
+      "y": 20
+    },
+    "ActionMetadata": {
+      "Greeting": {
+        "position": {
+          "x": 280,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "RetryLoop": {
+        "position": {
+          "x": 540,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "MenuInput": {
+        "position": {
+          "x": 800,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueGeneral": {
+        "position": {
+          "x": 800,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueClaims": {
+        "position": {
+          "x": 1060,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueBenefits": {
+        "position": {
+          "x": 1060,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueAuthorizations": {
+        "position": {
+          "x": 1060,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueBilling": {
+        "position": {
+          "x": 1060,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "RetryPrompt": {
+        "position": {
+          "x": 1060,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
+      "TransferGeneral": {
+        "position": {
+          "x": 1060,
+          "y": 1020
+        },
+        "isFriendlyName": true
+      },
+      "TransferClaims": {
+        "position": {
+          "x": 1320,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "TransferBenefits": {
+        "position": {
+          "x": 1320,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "TransferAuthorizations": {
+        "position": {
+          "x": 1320,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "TransferBilling": {
+        "position": {
+          "x": 1320,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "Disconnect": {
+        "position": {
+          "x": 1320,
+          "y": 820
+        },
+        "isFriendlyName": true
+      }
+    }
+  },
   "Actions": [
     {
-      "Identifier": "start",
-      "Type": "DisconnectParticipant",
+      "Identifier": "Greeting",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Thanks for calling. For claims, press or say 1. For benefits, press or say 2. For authorizations, press or say 3. For billing, press or say 4."
+      },
+      "Transitions": {
+        "NextAction": "RetryLoop",
+        "Errors": [
+          {
+            "NextAction": "RetryLoop",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "RetryLoop",
+      "Type": "Loop",
+      "Parameters": {
+        "LoopCount": 2
+      },
+      "Transitions": {
+        "NextAction": "MenuInput",
+        "Conditions": [
+          {
+            "NextAction": "MenuInput",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "ContinueLooping"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueGeneral",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "DoneLooping"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "MenuInput",
+      "Type": "ConnectParticipantWithLexBot",
+      "Parameters": {
+        "Text": "For claims, press or say 1. For benefits, press or say 2. For authorizations, press or say 3. For billing, press or say 4.",
+        "LexV2Bot": {
+          "AliasArn": "arn:aws:lex:us-east-1:084396578198:bot-alias/AOEWLIZGX8/H5SJSUACSG"
+        }
+      },
+      "Transitions": {
+        "NextAction": "RetryPrompt",
+        "Conditions": [
+          {
+            "NextAction": "SetQueueClaims",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "ClaimsIntent"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueBenefits",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "BenefitsIntent"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueAuthorizations",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "AuthorizationsIntent"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueBilling",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "BillingIntent"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "RetryPrompt",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "RetryPrompt",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "RetryPrompt",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "RetryPrompt",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "We're sorry, we did not hear your choice."
+      },
+      "Transitions": {
+        "NextAction": "RetryLoop",
+        "Errors": [
+          {
+            "NextAction": "RetryLoop",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueClaims",
+      "Type": "UpdateContactTargetQueue",
+      "Parameters": {
+        "QueueId": "abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
+      },
+      "Transitions": {
+        "NextAction": "TransferClaims",
+        "Errors": [
+          {
+            "NextAction": "TransferClaims",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferClaims",
+      "Type": "TransferContactToQueue",
       "Parameters": {},
-      "Transitions": {}
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "QueueAtCapacity"
+          },
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueBenefits",
+      "Type": "UpdateContactTargetQueue",
+      "Parameters": {
+        "QueueId": "26a7cd43-093a-4a28-aef6-18b2ee9fd943"
+      },
+      "Transitions": {
+        "NextAction": "TransferBenefits",
+        "Errors": [
+          {
+            "NextAction": "TransferBenefits",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferBenefits",
+      "Type": "TransferContactToQueue",
+      "Parameters": {},
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "QueueAtCapacity"
+          },
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueAuthorizations",
+      "Type": "UpdateContactTargetQueue",
+      "Parameters": {
+        "QueueId": "81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
+      },
+      "Transitions": {
+        "NextAction": "TransferAuthorizations",
+        "Errors": [
+          {
+            "NextAction": "TransferAuthorizations",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferAuthorizations",
+      "Type": "TransferContactToQueue",
+      "Parameters": {},
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "QueueAtCapacity"
+          },
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueBilling",
+      "Type": "UpdateContactTargetQueue",
+      "Parameters": {
+        "QueueId": "ef33ec80-8e64-433b-a099-97fb236d8fdc"
+      },
+      "Transitions": {
+        "NextAction": "TransferBilling",
+        "Errors": [
+          {
+            "NextAction": "TransferBilling",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferBilling",
+      "Type": "TransferContactToQueue",
+      "Parameters": {},
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "QueueAtCapacity"
+          },
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueGeneral",
+      "Type": "UpdateContactTargetQueue",
+      "Parameters": {
+        "QueueId": "9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
+      },
+      "Transitions": {
+        "NextAction": "TransferGeneral",
+        "Errors": [
+          {
+            "NextAction": "TransferGeneral",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferGeneral",
+      "Type": "TransferContactToQueue",
+      "Parameters": {},
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "QueueAtCapacity"
+          },
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "Disconnect",
+      "Type": "DisconnectParticipant",
+      "Parameters": {}
     }
   ]
 }
