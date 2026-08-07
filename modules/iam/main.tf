@@ -134,6 +134,15 @@ data "aws_iam_policy_document" "deploy_permissions" {
   }
 
   statement {
+    sid    = "LambdaKmsKeyRead"
+    effect = "Allow"
+    actions = [
+      "kms:DescribeKey",
+    ]
+    resources = ["arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
+  }
+
+  statement {
     sid    = "LambdaLayerManage"
     effect = "Allow"
     actions = [

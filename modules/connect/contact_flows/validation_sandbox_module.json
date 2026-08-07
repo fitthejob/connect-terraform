@@ -1,0 +1,12 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "start",
+  "Actions": [
+    {
+      "Identifier": "start",
+      "Type": "EndFlowModuleExecution",
+      "Parameters": {},
+      "Transitions": {}
+    }
+  ]
+}
