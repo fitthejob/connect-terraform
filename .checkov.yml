@@ -9,3 +9,13 @@ skip-check:
   # no ARN to scope down to in any of these cases.
   - CKV_AWS_355
   - CKV_AWS_356
+  # CKV_AWS_117: "Lambda function is configured inside a VPC" — the repo's
+  # only Lambda (modules/lambda's eligibility-check function) is deliberately
+  # not VPC-attached. This is a prototype build; a live build would move it
+  # into a VPC (with NAT/VPC endpoints for Connect Customer Profiles access)
+  # for network isolation. Deferred to avoid VPC/subnet/NAT infra and
+  # cold-start latency on a function in a live customer call path. Repo-wide
+  # skip because Checkov's inline checkov:skip comment does not suppress
+  # this check (verified locally) — if a second Lambda is ever added, revisit
+  # whether it also needs this exemption or should be scoped per-resource.
+  - CKV_AWS_117
