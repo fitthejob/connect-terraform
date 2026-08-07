@@ -12,6 +12,8 @@ set -euo pipefail
 
 eval "$(jq -r '@sh "BOT_ID=\(.bot_id) BOT_VERSION=\(.bot_version) ALIAS_NAME=\(.alias_name) LOCALE_ID=\(.locale_id)"')"
 
+echo "create_bot_alias: AWS_REGION='${AWS_REGION:-<unset>}' AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION:-<unset>}' configured_region='$(aws configure get region 2>&1 || echo <error>)'" >&2
+
 REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-$(aws configure get region)}}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
