@@ -12,8 +12,13 @@ set -euo pipefail
 
 eval "$(jq -r '@sh "BOT_ID=\(.bot_id) BOT_VERSION=\(.bot_version) ALIAS_NAME=\(.alias_name) LOCALE_ID=\(.locale_id)"')"
 
-REGION=$(aws configure get region)
+REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-$(aws configure get region)}}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+if [ -z "$REGION" ]; then
+  echo "create_bot_alias: ERROR - could not resolve AWS region (checked \$AWS_REGION, \$AWS_DEFAULT_REGION, aws configure get region)" >&2
+  exit 1
+fi
 
 EXISTING_ALIAS_ID=$(aws lexv2-models list-bot-aliases \
   --bot-id "$BOT_ID" \
