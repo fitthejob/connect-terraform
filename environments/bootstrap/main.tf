@@ -18,6 +18,7 @@ module "pr_checks_role" {
   source = "../../modules/iam"
 
   role_name           = "github-connect-pr-checks"
+  policy_name         = "github-connect-pr-checks-readonly"
   github_repo         = var.github_repo
   github_repo_numeric = var.github_repo_numeric
   allow_pull_requests = true
