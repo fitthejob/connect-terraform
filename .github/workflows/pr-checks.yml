@@ -54,4 +54,4 @@ jobs:
           config_file: .checkov.yml
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -var="artifact_sha=${{ github.sha }}"
