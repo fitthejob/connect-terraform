@@ -7,8 +7,34 @@ on:
             - completed
 
 jobs:
-    deploy-staging:
+    promote-artifacts:
         if: ${{ github.event.workflow_run.conclusion == 'success'}}
+        environment: staging
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+        steps:
+            - name: OIDC Authentication
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                  aws-region: us-east-1
+
+            - name: Promote dev artifacts to staging
+              env:
+                  DEV_SHA: ${{ github.event.workflow_run.head_sha }}
+              run: |
+                  aws s3 cp \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/eligibility-check/dev/eligibility-check-${DEV_SHA}.zip \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/eligibility-check/staging/eligibility-check.zip
+
+                  aws s3 cp \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/shared-deps/dev/shared-deps-${DEV_SHA}.zip \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/shared-deps/staging/shared-deps.zip
+
+    deploy-staging:
+        needs: promote-artifacts
         environment: staging
         runs-on: ubuntu-latest
         defaults:
