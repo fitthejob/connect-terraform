@@ -321,6 +321,15 @@ data "aws_iam_policy_document" "deploy_permissions" {
     # account/caller introspection, not a resource-scoped action.
     resources = ["*"]
   }
+}
+
+# Split from deploy_permissions above: a single aws_iam_policy has a hard
+# 6144-character size limit, and adding these statements to
+# deploy_permissions directly exceeded it (CreatePolicyVersion:
+# LimitExceeded). This is a second policy document attached to the same
+# deploy role, not a separate permissions profile.
+data "aws_iam_policy_document" "deploy_permissions_contact_center" {
+  count = var.permissions_profile == "deploy" ? 1 : 0
 
   # --- Contact center prototype spec (docs/superpowers/specs/contact-center-prototype-spec.md), Phase 0 ---
   # Drafted from AWS IAM action references ahead of Phase 1+ work so the
@@ -495,4 +504,18 @@ resource "aws_iam_policy" "this" {
 resource "aws_iam_role_policy_attachment" "this" {
   role       = aws_iam_role.this.name
   policy_arn = aws_iam_policy.this.arn
+}
+
+# Second policy for the deploy profile only -- see the comment on
+# deploy_permissions_contact_center above for why this is split out.
+resource "aws_iam_policy" "contact_center" {
+  count  = var.permissions_profile == "deploy" ? 1 : 0
+  name   = "${coalesce(var.policy_name, var.role_name)}-contact-center"
+  policy = data.aws_iam_policy_document.deploy_permissions_contact_center[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "contact_center" {
+  count      = var.permissions_profile == "deploy" ? 1 : 0
+  role       = aws_iam_role.this.name
+  policy_arn = aws_iam_policy.contact_center[0].arn
 }
