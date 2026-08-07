@@ -344,9 +344,12 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
   }
 
   statement {
-    sid     = "StateBucketAccess"
-    effect  = "Allow"
-    actions = ["s3:GetObject", "s3:ListBucket"]
+    sid    = "StateBucketAccess"
+    effect = "Allow"
+    # terraform plan still acquires the S3-native state lock (use_lockfile =
+    # true in environments/*/backend.tf), which requires PutObject/
+    # DeleteObject on the .tflock file even for a read-only plan.
+    actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
     resources = [
       "arn:aws:s3:::${var.tfstate_bucket}",
       "arn:aws:s3:::${var.tfstate_bucket}/*",
