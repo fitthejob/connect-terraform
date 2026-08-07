@@ -2,9 +2,11 @@ import {
   ConnectParticipantWithLexBotActionBuilder,
   DisconnectParticipantActionBuilder,
   FlowBuilder,
+  InvokeFlowModuleActionBuilder,
   LoopActionBuilder,
   MessageParticipantActionBuilder,
   TransferContactToQueueActionBuilder,
+  UpdateContactAttributesActionBuilder,
   UpdateContactTargetQueueActionBuilder,
 } from "@fitthejob/connect-flow-builder";
 import { writeFileSync } from "node:fs";
@@ -20,6 +22,7 @@ const QUEUE_BENEFITS_ID = requireEnv("QUEUE_BENEFITS_ID");
 const QUEUE_AUTHORIZATIONS_ID = requireEnv("QUEUE_AUTHORIZATIONS_ID");
 const QUEUE_BILLING_ID = requireEnv("QUEUE_BILLING_ID");
 const QUEUE_GENERAL_ID = requireEnv("QUEUE_GENERAL_ID");
+const CALLBACK_OFFER_MODULE_ID = requireEnv("CALLBACK_OFFER_MODULE_ID");
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -70,46 +73,55 @@ function queueTransferPair(
   transferActionId: string,
   queueId: string,
 ) {
+  const setCallbackQueueId = new UpdateContactAttributesActionBuilder(
+    `${transferActionId}SetCallbackQueue`,
+  )
+    .targetCurrent()
+    .attribute("CallbackQueueId", queueId)
+    .next("InvokeCallbackOffer")
+    .onError("InvokeCallbackOffer")
+    .build();
+
   const setQueue = new UpdateContactTargetQueueActionBuilder(setActionId)
     .queueId(queueId)
     .next(transferActionId)
     .build();
 
   const transfer = new TransferContactToQueueActionBuilder(transferActionId)
-    .onError("Disconnect", "QueueAtCapacity")
+    .onError(`${transferActionId}SetCallbackQueue`, "QueueAtCapacity")
     .onError("Disconnect", "NoMatchingError")
     .build();
 
-  return [setQueue, transfer];
+  return [setQueue, transfer, setCallbackQueueId];
 }
 
-const [setQueueClaims, transferClaims] = queueTransferPair(
-  "SetQueueClaims",
-  "TransferClaims",
-  QUEUE_CLAIMS_ID,
-);
-const [setQueueBenefits, transferBenefits] = queueTransferPair(
-  "SetQueueBenefits",
-  "TransferBenefits",
-  QUEUE_BENEFITS_ID,
-);
-const [setQueueAuthorizations, transferAuthorizations] = queueTransferPair(
+const [setQueueClaims, transferClaims, setCallbackQueueClaims] =
+  queueTransferPair("SetQueueClaims", "TransferClaims", QUEUE_CLAIMS_ID);
+const [setQueueBenefits, transferBenefits, setCallbackQueueBenefits] =
+  queueTransferPair("SetQueueBenefits", "TransferBenefits", QUEUE_BENEFITS_ID);
+const [
+  setQueueAuthorizations,
+  transferAuthorizations,
+  setCallbackQueueAuthorizations,
+] = queueTransferPair(
   "SetQueueAuthorizations",
   "TransferAuthorizations",
   QUEUE_AUTHORIZATIONS_ID,
 );
-const [setQueueBilling, transferBilling] = queueTransferPair(
-  "SetQueueBilling",
-  "TransferBilling",
-  QUEUE_BILLING_ID,
-);
-const [setQueueGeneral, transferGeneral] = queueTransferPair(
-  "SetQueueGeneral",
-  "TransferGeneral",
-  QUEUE_GENERAL_ID,
-);
+const [setQueueBilling, transferBilling, setCallbackQueueBilling] =
+  queueTransferPair("SetQueueBilling", "TransferBilling", QUEUE_BILLING_ID);
+const [setQueueGeneral, transferGeneral, setCallbackQueueGeneral] =
+  queueTransferPair("SetQueueGeneral", "TransferGeneral", QUEUE_GENERAL_ID);
 
 const disconnect = new DisconnectParticipantActionBuilder("Disconnect").build();
+
+const invokeCallbackOffer = new InvokeFlowModuleActionBuilder(
+  "InvokeCallbackOffer",
+)
+  .flowModuleId(CALLBACK_OFFER_MODULE_ID)
+  .next("Disconnect")
+  .onError("Disconnect")
+  .build();
 
 const flow = new FlowBuilder("MainInbound")
   .startWith(greeting)
@@ -118,14 +130,20 @@ const flow = new FlowBuilder("MainInbound")
   .add(retryPrompt)
   .add(setQueueClaims)
   .add(transferClaims)
+  .add(setCallbackQueueClaims)
   .add(setQueueBenefits)
   .add(transferBenefits)
+  .add(setCallbackQueueBenefits)
   .add(setQueueAuthorizations)
   .add(transferAuthorizations)
+  .add(setCallbackQueueAuthorizations)
   .add(setQueueBilling)
   .add(transferBilling)
+  .add(setCallbackQueueBilling)
   .add(setQueueGeneral)
   .add(transferGeneral)
+  .add(setCallbackQueueGeneral)
+  .add(invokeCallbackOffer)
   .add(disconnect)
   .build();
 

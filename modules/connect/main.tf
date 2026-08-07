@@ -119,6 +119,16 @@ resource "aws_connect_contact_flow" "validation_sandbox" {
   content     = file("${path.module}/contact_flows/validation_sandbox.json")
 }
 
+resource "aws_connect_contact_flow_module" "callback_offer" {
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Callback-Offer-${var.environment}"
+  description = "Offers a native Connect callback when a queue is at capacity"
+  content     = file("${path.module}/contact_flows/callback_offer.json")
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # aws_connect_bot_association only supports Lex V1 bots in this provider
 # (no lex_v2_bot block — checked schemas directly, and HashiCorp's tracking
 # issue for V2 support, github.com/hashicorp/terraform-provider-aws/issues/30869,
