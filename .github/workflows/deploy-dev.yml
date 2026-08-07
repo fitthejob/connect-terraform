@@ -146,6 +146,7 @@ jobs:
           echo "queue_billing_id=$(terraform output -raw queue_billing_id)" >> "$GITHUB_OUTPUT"
           echo "queue_general_id=$(terraform output -raw queue_general_id)" >> "$GITHUB_OUTPUT"
           echo "lex_bot_alias_arn=$(terraform output -raw lex_bot_alias_arn)" >> "$GITHUB_OUTPUT"
+          echo "callback_offer_module_id=$(terraform output -raw callback_offer_module_id)" >> "$GITHUB_OUTPUT"
 
       - name: Install flow-authoring dependencies
         working-directory: .
@@ -163,6 +164,7 @@ jobs:
           QUEUE_BILLING_ID: ${{ steps.tf-outputs.outputs.queue_billing_id }}
           QUEUE_GENERAL_ID: ${{ steps.tf-outputs.outputs.queue_general_id }}
           LEX_BOT_ALIAS_ARN: ${{ steps.tf-outputs.outputs.lex_bot_alias_arn }}
+          CALLBACK_OFFER_MODULE_ID: ${{ steps.tf-outputs.outputs.callback_offer_module_id }}
 
       - name: Validate flow against sandbox
         working-directory: .
