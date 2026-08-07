@@ -68,7 +68,7 @@ variable "customer_profiles_domain_name" {
 variable "compatible_runtimes" {
   description = "Compatible runtimes for the shared dependencies layer"
   type        = list(string)
-  default     = ["nodejs18.x"]
+  default     = ["nodejs24.x"]
 }
 
 variable "artifact_sha" {

@@ -16,5 +16,5 @@ variable "shared_deps_layer_s3_key" {
 variable "compatible_runtimes" {
   description = "Compatible runtimes for the shared dependencies layer"
   type        = list(string)
-  default     = ["nodejs18.x"]
+  default     = ["nodejs24.x"]
 }
