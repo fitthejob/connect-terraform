@@ -9,8 +9,5 @@
     "outDir": "dist",
     "rootDir": "scripts"
   },
-  "include": ["scripts/**/*.ts"],
-  "ts-node": {
-    "esm": true
-  }
+  "include": ["scripts/**/*.ts"]
 }

@@ -1,0 +1,115 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "OfferCallback",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 20,
+      "y": 20
+    },
+    "ActionMetadata": {
+      "OfferCallback": {
+        "position": {
+          "x": 280,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "GetCallbackChoice": {
+        "position": {
+          "x": 540,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "EndModule": {
+        "position": {
+          "x": 800,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "ScheduleCallback": {
+        "position": {
+          "x": 800,
+          "y": 220
+        },
+        "isFriendlyName": true
+      }
+    }
+  },
+  "Actions": [
+    {
+      "Identifier": "OfferCallback",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "All agents are currently busy. Press 1 to receive a callback instead of waiting, or stay on the line to continue holding."
+      },
+      "Transitions": {
+        "NextAction": "GetCallbackChoice",
+        "Errors": [
+          {
+            "NextAction": "GetCallbackChoice",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "GetCallbackChoice",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "InputTimeLimitSeconds": "10",
+        "StoreInput": "False",
+        "Text": "Press 1 for a callback, or stay on the line to continue holding."
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Conditions": [
+          {
+            "NextAction": "ScheduleCallback",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "ScheduleCallback",
+      "Type": "CreateCallbackContact",
+      "Parameters": {
+        "QueueId": "$.Attributes.CallbackQueueId",
+        "InitialCallDelaySeconds": 1,
+        "MaximumConnectionAttempts": 3,
+        "RetryDelaySeconds": 60
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "EndModule",
+      "Type": "EndFlowModuleExecution",
+      "Parameters": {}
+    }
+  ]
+}
