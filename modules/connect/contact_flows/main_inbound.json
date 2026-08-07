@@ -553,7 +553,7 @@
       "Identifier": "InvokeCallbackOffer",
       "Type": "InvokeFlowModule",
       "Parameters": {
-        "FlowModuleId": "PENDING-TERRAFORM-APPLY"
+        "FlowModuleId": "82faf241-b6dc-4e68-bd4f-39dbd578f75a"
       },
       "Transitions": {
         "NextAction": "Disconnect",
