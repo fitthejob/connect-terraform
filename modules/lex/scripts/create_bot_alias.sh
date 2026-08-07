@@ -12,7 +12,7 @@ set -euo pipefail
 
 eval "$(jq -r '@sh "BOT_ID=\(.bot_id) BOT_VERSION=\(.bot_version) ALIAS_NAME=\(.alias_name) LOCALE_ID=\(.locale_id)"')"
 
-echo "create_bot_alias: AWS_REGION='${AWS_REGION:-<unset>}' AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION:-<unset>}' configured_region='$(aws configure get region 2>&1 || echo <error>)'" >&2
+echo "create_bot_alias: AWS_REGION='${AWS_REGION:-unset}' AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION:-unset}' configured_region='$(aws configure get region 2>&1 || echo error)'" >&2
 
 REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-$(aws configure get region)}}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -22,10 +22,14 @@ if [ -z "$REGION" ]; then
   exit 1
 fi
 
+echo "create_bot_alias: BOT_ID='$BOT_ID' BOT_VERSION='$BOT_VERSION' ALIAS_NAME='$ALIAS_NAME' LOCALE_ID='$LOCALE_ID'" >&2
+
 EXISTING_ALIAS_ID=$(aws lexv2-models list-bot-aliases \
   --bot-id "$BOT_ID" \
   --query "botAliasSummaries[?botAliasName=='${ALIAS_NAME}'].botAliasId" \
   --output text)
+
+echo "create_bot_alias: EXISTING_ALIAS_ID='$EXISTING_ALIAS_ID'" >&2
 
 if [ -n "$EXISTING_ALIAS_ID" ] && [ "$EXISTING_ALIAS_ID" != "None" ]; then
   ALIAS_ID="$EXISTING_ALIAS_ID"
