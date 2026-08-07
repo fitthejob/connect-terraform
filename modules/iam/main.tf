@@ -321,6 +321,99 @@ data "aws_iam_policy_document" "deploy_permissions" {
     # account/caller introspection, not a resource-scoped action.
     resources = ["*"]
   }
+
+  # --- Contact center prototype spec (docs/superpowers/specs/contact-center-prototype-spec.md), Phase 0 ---
+  # Drafted from AWS IAM action references ahead of Phase 1+ work so the
+  # apply -> AccessDenied -> add-permission loop from the eligibility-check
+  # build doesn't repeat wholesale. TODO: scope resources down to specific
+  # ARNs once Phase 1's actual DynamoDB table name, SNS topic name, and
+  # EventBridge bus/rule names are decided -- "*" here is a starting point,
+  # not the intended final shape.
+
+  statement {
+    sid    = "DynamoDbVerificationTableManage"
+    effect = "Allow"
+    actions = [
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteTable",
+      "dynamodb:DescribeTable",
+      "dynamodb:UpdateTable",
+      "dynamodb:UpdateTimeToLive",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:TagResource",
+      "dynamodb:UntagResource",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query",
+      "dynamodb:Scan",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "SnsVerificationTopicManage"
+    effect = "Allow"
+    actions = [
+      "sns:CreateTopic",
+      "sns:DeleteTopic",
+      "sns:GetTopicAttributes",
+      "sns:SetTopicAttributes",
+      "sns:TagResource",
+      "sns:UntagResource",
+      "sns:ListTagsForResource",
+      "sns:Subscribe",
+      "sns:Unsubscribe",
+      "sns:ListSubscriptionsByTopic",
+      "sns:Publish",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "EventBridgePipelineManage"
+    effect = "Allow"
+    actions = [
+      "events:CreateEventBus",
+      "events:DeleteEventBus",
+      "events:DescribeEventBus",
+      "events:TagResource",
+      "events:UntagResource",
+      "events:ListTagsForResource",
+      "events:PutRule",
+      "events:DeleteRule",
+      "events:DescribeRule",
+      "events:ListRules",
+      "events:PutTargets",
+      "events:RemoveTargets",
+      "events:ListTargetsByRule",
+      "events:CreateArchive",
+      "events:DeleteArchive",
+      "events:DescribeArchive",
+      "events:UpdateArchive",
+      "events:PutEvents",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "CloudWatchAlarmManage"
+    effect = "Allow"
+    actions = [
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:TagResource",
+      "cloudwatch:UntagResource",
+      "cloudwatch:ListTagsForResource",
+    ]
+    # PutMetricAlarm has no resource-level permissions for alarm creation
+    # itself in most action contexts; scoped to alarm-name patterns once
+    # Phase 2's alarm naming convention is decided.
+    resources = ["*"]
+  }
 }
 
 data "aws_iam_policy_document" "pr_checks_permissions" {
