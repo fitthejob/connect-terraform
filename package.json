@@ -6,9 +6,11 @@
   "description": "Flow-authoring tooling for the mini-connect Terraform infrastructure",
   "scripts": {
     "generate:main-inbound-flow": "tsx scripts/main-inbound-flow.ts",
-    "generate:callback-offer-flow": "tsx scripts/callback-offer-flow.ts"
+    "generate:callback-offer-flow": "tsx scripts/callback-offer-flow.ts",
+    "validate:callback-offer-flow": "tsx scripts/validate-callback-offer-flow.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-connect": "^3.0.0",
     "@fitthejob/connect-flow-builder": "^0.2.2"
   },
   "devDependencies": {

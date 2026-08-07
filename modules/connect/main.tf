@@ -119,6 +119,16 @@ resource "aws_connect_contact_flow" "validation_sandbox" {
   content     = file("${path.module}/contact_flows/validation_sandbox.json")
 }
 
+# Module counterpart to validation_sandbox above -- CI pushes generated
+# module JSON (e.g. callback_offer.json) here via UpdateContactFlowModuleContent
+# before trusting it enough to apply to the real module resource.
+resource "aws_connect_contact_flow_module" "validation_sandbox_module" {
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Validation-Sandbox-Module-${var.environment}"
+  description = "CI target for validating generated flow module JSON against the real Connect API"
+  content     = file("${path.module}/contact_flows/validation_sandbox_module.json")
+}
+
 resource "aws_connect_contact_flow_module" "callback_offer" {
   instance_id = data.aws_connect_instance.main.id
   name        = "Callback-Offer-${var.environment}"
