@@ -7,7 +7,7 @@
   "scripts": {
     "generate:main-inbound-flow": "tsx scripts/main-inbound-flow.ts",
     "generate:callback-offer-flow": "tsx scripts/callback-offer-flow.ts",
-    "validate:callback-offer-flow": "tsx scripts/validate-callback-offer-flow.ts"
+    "validate:flow-module": "tsx scripts/validate-flow-module.ts"
   },
   "dependencies": {
     "@aws-sdk/client-connect": "^3.0.0",
