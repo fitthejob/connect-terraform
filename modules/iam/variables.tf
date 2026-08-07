@@ -56,3 +56,9 @@ variable "tfstate_bucket" {
   description = "S3 bucket name for Terraform remote state"
   type        = string
 }
+
+variable "policy_name" {
+  description = "Name for the managed IAM policy attached to this role. Defaults to role_name, but the two don't always match — e.g. the pr-checks role's existing policy is named with a -readonly suffix."
+  type        = string
+  default     = null
+}

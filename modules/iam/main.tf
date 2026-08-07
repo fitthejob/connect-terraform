@@ -311,7 +311,7 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
 }
 
 resource "aws_iam_policy" "this" {
-  name   = var.role_name
+  name   = coalesce(var.policy_name, var.role_name)
   policy = var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json : data.aws_iam_policy_document.pr_checks_permissions[0].json
 }
 
