@@ -3,11 +3,6 @@ variable "aws_connect_alias" {
   type        = string
 }
 
-variable "connect_instance_id" {
-  description = "Amazon Connect instance ID"
-  type        = string
-}
-
 variable "customer_profiles_domain_name" {
   description = "Amazon Connect Customer Profiles Domain name"
   type        = string
