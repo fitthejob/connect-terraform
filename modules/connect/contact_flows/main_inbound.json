@@ -553,7 +553,7 @@
       "Identifier": "InvokeCallbackOffer",
       "Type": "InvokeFlowModule",
       "Parameters": {
-        "FlowModuleId": "PENDING-TERRAFORM-APPLY"
+        "FlowModuleId": "::error::Terraform exited with code 1."
       },
       "Transitions": {
         "NextAction": "Disconnect",
