@@ -26,6 +26,7 @@ module "pr_checks_role" {
   allow_pull_requests = true
 
   permissions_profile     = "pr_checks"
+  environments            = ["dev", "staging", "prod"]
   lambda_artifacts_bucket = var.lambda_artifacts_bucket
   tfstate_bucket          = var.tfstate_bucket
 }
