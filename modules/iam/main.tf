@@ -73,6 +73,11 @@ locals {
   ])
 }
 
+# checkov:skip=CKV_AWS_356: wildcard resources on individual statements are
+# justified inline below (ConnectManage, LambdaLayerManage, LexV2Manage,
+# ConnectBotAssociation, CallerIdentityForArnConstruction) — actions on
+# those statements have no resource-level permissions or aren't
+# ARN-addressable ahead of creation; all other statements are ARN-scoped.
 data "aws_iam_policy_document" "deploy_permissions" {
   count = var.permissions_profile == "deploy" ? 1 : 0
 
@@ -299,6 +304,9 @@ data "aws_iam_policy_document" "deploy_permissions" {
   }
 }
 
+# checkov:skip=CKV_AWS_356: wildcard resources on individual statements are
+# justified inline below (ConnectReadOnly, LambdaLayerReadOnly) — same
+# rationale as deploy_permissions above.
 data "aws_iam_policy_document" "pr_checks_permissions" {
   count = var.permissions_profile == "pr_checks" ? 1 : 0
 

@@ -15,6 +15,8 @@ resource "aws_iam_role" "lex_bot" {
   assume_role_policy = data.aws_iam_policy_document.lex_assume_role.json
 }
 
+# checkov:skip=CKV_AWS_356: polly:SynthesizeSpeech has no resource-level
+# permissions; AWS-managed Polly voices aren't ARN-addressable.
 data "aws_iam_policy_document" "lex_bot_permissions" {
   statement {
     effect  = "Allow"

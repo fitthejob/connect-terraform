@@ -34,6 +34,8 @@ resource "aws_iam_role_policy_attachment" "eligibility_check_xray" {
 # permissions in Connect Customer Profiles; AWS does not support scoping
 # these to a domain ARN.
 # tfsec:ignore:aws-iam-no-policy-wildcards
+# checkov:skip=CKV_AWS_355: same rationale as above — no resource-level
+# permissions exist for these Customer Profiles actions.
 resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
   name = "lambda-eligibility-check-customer-profiles-policy-${var.environment}"
   policy = jsonencode({
