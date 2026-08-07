@@ -114,7 +114,7 @@ resource "aws_lambda_function" "eligibility_check" {
 
   # Caps concurrent executions so a spike in calls can't consume the
   # account's entire concurrency pool and starve other Lambdas.
-  reserved_concurrent_executions = 20
+  reserved_concurrent_executions = 2
 
   dead_letter_config {
     target_arn = aws_sqs_queue.eligibility_check_dlq.arn
