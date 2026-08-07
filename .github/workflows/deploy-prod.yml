@@ -7,8 +7,32 @@ on:
             - completed
 
 jobs:
-    deploy-prod:
+    promote-artifacts:
         if: ${{ github.event.workflow_run.conclusion == 'success'}}
+        environment: prod
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+        steps:
+            - name: OIDC Authentication
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                  aws-region: us-east-1
+
+            - name: Promote staging artifacts to prod
+              run: |
+                  aws s3 cp \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/eligibility-check/staging/eligibility-check.zip \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/eligibility-check/prod/eligibility-check.zip
+
+                  aws s3 cp \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/shared-deps/staging/shared-deps.zip \
+                    s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/shared-deps/prod/shared-deps.zip
+
+    deploy-prod:
+        needs: promote-artifacts
         environment: prod
         runs-on: ubuntu-latest
         defaults:
