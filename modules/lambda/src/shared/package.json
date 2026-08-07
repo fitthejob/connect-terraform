@@ -1,0 +1,16 @@
+{
+  "name": "@connect-terraform/shared",
+  "version": "1.0.0",
+  "description": "Shared Connect Lambda response contract and event schema types",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "commonjs",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^7.0.2"
+  }
+}
