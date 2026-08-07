@@ -310,8 +310,12 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
   }
 }
 
-resource "aws_iam_role_policy" "this" {
-  name   = "${var.role_name}-permissions"
-  role   = aws_iam_role.this.id
+resource "aws_iam_policy" "this" {
+  name   = var.role_name
   policy = var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json : data.aws_iam_policy_document.pr_checks_permissions[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "this" {
+  role       = aws_iam_role.this.name
+  policy_arn = aws_iam_policy.this.arn
 }
