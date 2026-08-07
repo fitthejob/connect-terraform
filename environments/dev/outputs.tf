@@ -8,6 +8,11 @@ output "validation_sandbox_module_id" {
   value       = module.connect.validation_sandbox_module_id
 }
 
+output "callback_offer_module_id" {
+  description = "Contact flow module ID of the CallbackOffer flow module"
+  value       = module.connect.callback_offer_module_id
+}
+
 output "connect_instance_id" {
   description = "Amazon Connect instance ID"
   value       = module.connect.connect_instance_id
