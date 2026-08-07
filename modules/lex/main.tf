@@ -17,7 +17,9 @@ resource "aws_iam_role" "lex_bot" {
 
 data "aws_iam_policy_document" "lex_bot_permissions" {
   statement {
-    effect    = "Allow"
+    effect = "Allow"
+    # tfsec:ignore:aws-iam-no-policy-wildcards - polly:SynthesizeSpeech has no
+    # resource-level permissions; AWS-managed Polly voices aren't ARN-addressable.
     actions   = ["polly:SynthesizeSpeech"]
     resources = ["*"]
   }
@@ -29,7 +31,7 @@ data "aws_iam_policy_document" "lex_bot_permissions" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["*"]
+    resources = ["arn:aws:logs:*:*:log-group:/aws/lex/connect-${var.bot_name}*"]
   }
 }
 
