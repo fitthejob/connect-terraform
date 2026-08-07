@@ -1,14 +1,10 @@
 name: Deploy Prod
 
 on:
-    workflow_run:
-        workflows: ["Deploy Staging"]
-        types:
-            - completed
+    workflow_dispatch: {}
 
 jobs:
     promote-artifacts:
-        if: ${{ github.event.workflow_run.conclusion == 'success'}}
         environment: prod
         runs-on: ubuntu-latest
         permissions:
