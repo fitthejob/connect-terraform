@@ -58,7 +58,7 @@ resource "aws_iam_role_policy_attachment" "lambda_connect_customer_profiles" {
 
 # Lambda eligibility check function
 resource "aws_lambda_function" "eligibility_check" {
-  function_name = "lambda-eligibility-check"
+  function_name = var.lambda_eligibility_check_function_name
   role          = aws_iam_role.eligibility_check.arn
   runtime       = "nodejs18.x"
   handler       = "index.handler"
