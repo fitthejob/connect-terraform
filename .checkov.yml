@@ -1,0 +1,11 @@
+skip-check:
+  # CKV_AWS_355/356: "no IAM policy allows '*' as a statement's resource for
+  # restrictable actions" — flags a handful of statements in modules/iam,
+  # modules/lambda, and modules/lex where the underlying AWS action has no
+  # resource-level permissions at all (polly:SynthesizeSpeech,
+  # sts:GetCallerIdentity, lambda:GetLayerVersion pre-publish,
+  # profile:SearchProfiles/GetProfile) or targets a resource AWS assigns an
+  # ID to only after creation (connect:AssociateBot, lex:CreateBot). There is
+  # no ARN to scope down to in any of these cases.
+  - CKV_AWS_355
+  - CKV_AWS_356

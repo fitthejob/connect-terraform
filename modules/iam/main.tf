@@ -73,23 +73,12 @@ locals {
   ])
 }
 
-# checkov:skip=CKV_AWS_356: wildcard resources on individual statements are
-# justified inline below (ConnectManage, LambdaLayerManage, LexV2Manage,
-# ConnectBotAssociation, CallerIdentityForArnConstruction) — actions on
-# those statements have no resource-level permissions or aren't
-# ARN-addressable ahead of creation; all other statements are ARN-scoped.
 data "aws_iam_policy_document" "deploy_permissions" {
   count = var.permissions_profile == "deploy" ? 1 : 0
 
   statement {
     sid    = "ConnectManage"
     effect = "Allow"
-    # connect:Describe*/Get*/List*/Search* are broad-read wildcards covering
-    # dozens of read-only Connect APIs (queues, routing profiles, contact
-    # flows, users, etc.) needed for plan/apply drift detection; enumerating
-    # each concrete action isn't practical and AWS doesn't expose a coarser
-    # read-only managed policy scoped to just this repo's resource types.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     actions = [
       "connect:Describe*",
       "connect:Get*",
@@ -112,10 +101,8 @@ data "aws_iam_policy_document" "deploy_permissions" {
     ]
     # Could be scoped to the specific Connect instance ARN
     # (arn:aws:connect:region:account:instance/instance-id), but modules/iam
-    # doesn't currently take the instance ID/alias as an input — adding that
-    # is a real follow-up, not done here to keep this change to a wildcard
-    # cleanup rather than a new variable + bootstrap wiring change.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # doesn't currently take the instance ID/alias as an input — a real
+    # follow-up, not done here.
     resources = ["*"]
   }
 
@@ -156,9 +143,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lambda:DeleteLayerVersion",
     ]
     # Layer version numbers are assigned by AWS on publish and aren't known
-    # ahead of time; scoping to a specific layer-version ARN isn't possible
-    # before the first PublishLayerVersion call.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # ahead of time; not scopable before the first PublishLayerVersion call.
     resources = ["*"]
   }
 
@@ -226,8 +211,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
     ]
     # lex:CreateBot's target doesn't exist before the call (the bot ID is
     # assigned by AWS on creation), so this can't be scoped ahead of a first
-    # apply without an ARN pattern that hasn't been verified here.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # apply.
     resources = ["*"]
   }
 
@@ -240,8 +224,7 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:ListBots",
     ]
     # See ConnectManage above — same instance-ARN scoping opportunity,
-    # deferred as a follow-up rather than done here.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # deferred as a follow-up.
     resources = ["*"]
   }
 
@@ -299,32 +282,24 @@ data "aws_iam_policy_document" "deploy_permissions" {
     actions = ["sts:GetCallerIdentity"]
     # sts:GetCallerIdentity has no resource-level permissions at all — it is
     # account/caller introspection, not a resource-scoped action.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 }
 
-# checkov:skip=CKV_AWS_356: wildcard resources on individual statements are
-# justified inline below (ConnectReadOnly, LambdaLayerReadOnly) — same
-# rationale as deploy_permissions above.
 data "aws_iam_policy_document" "pr_checks_permissions" {
   count = var.permissions_profile == "pr_checks" ? 1 : 0
 
   statement {
     sid    = "ConnectReadOnly"
     effect = "Allow"
-    # See ConnectManage in deploy_permissions above — same broad-read
-    # wildcard rationale, deferred as a follow-up rather than done here.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     actions = [
       "connect:Describe*",
       "connect:Get*",
       "connect:List*",
       "connect:Search*",
     ]
-    # See ConnectManage above — same instance-ARN scoping opportunity,
-    # deferred as a follow-up rather than done here.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
+    # See ConnectManage in deploy_permissions above — same instance-ARN
+    # scoping opportunity, deferred as a follow-up.
     resources = ["*"]
   }
 
@@ -351,7 +326,6 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
     ]
     # See LambdaLayerManage in deploy_permissions above — layer version
     # numbers aren't known ahead of time.
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 

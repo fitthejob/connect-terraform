@@ -29,13 +29,10 @@ resource "aws_iam_role_policy_attachment" "eligibility_check_xray" {
   policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
-# Define execution policy for getting and searching Amazon Connect customer profiles
+# Define execution policy for getting and searching Amazon Connect customer profiles.
 # profile:SearchProfiles and profile:GetProfile have no resource-level
 # permissions in Connect Customer Profiles; AWS does not support scoping
 # these to a domain ARN.
-# checkov:skip=CKV_AWS_355: same rationale — no resource-level permissions
-# exist for these Customer Profiles actions.
-# tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
   name = "lambda-eligibility-check-customer-profiles-policy-${var.environment}"
   policy = jsonencode({

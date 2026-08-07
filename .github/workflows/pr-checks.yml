@@ -39,11 +39,19 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: tfsec Security Scan
-        uses: aquasecurity/tfsec-action@v1.0.0
+      - name: Trivy Security Scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: 1
 
       - name: Checkov Security Scan
         uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          config_file: .checkov.yml
 
       - name: Terraform Plan
         run: terraform plan
