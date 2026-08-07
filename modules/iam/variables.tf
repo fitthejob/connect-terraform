@@ -3,6 +3,12 @@ variable "role_name" {
   type        = string
 }
 
+variable "role_description" {
+  description = "Description shown on the IAM role in the AWS console"
+  type        = string
+  default     = null
+}
+
 variable "github_repo" {
   description = "owner/repo, e.g. fitthejob/connect-terraform"
   type        = string
