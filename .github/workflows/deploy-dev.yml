@@ -16,7 +16,30 @@ jobs:
       contents: read
     strategy:
       matrix:
-        function: [eligibility-check]
+        include:
+          - function: eligibility-check
+            source_dir: eligibility-check
+          - function: customer-lookup
+            source_dir: customer-lookup
+          - function: routing-decision
+            source_dir: routing-decision
+          - function: sms-verification
+            source_dir: sms-verification
+          - function: contact-event-publisher
+            source_dir: contact-event-publisher
+          # The 4 metric-subscriber Lambdas share one source directory
+          # (event-metric-subscriber/) but are 4 distinct deployed
+          # functions -- same code, different METRIC_NAME/DIMENSION_FIELD
+          # env vars set in environments/dev/main.tf. function is the
+          # output artifact name; source_dir is where the code actually is.
+          - function: contact-initiated-metric
+            source_dir: event-metric-subscriber
+          - function: contact-transferred-metric
+            source_dir: event-metric-subscriber
+          - function: contact-disconnected-metric
+            source_dir: event-metric-subscriber
+          - function: verification-completed-metric
+            source_dir: event-metric-subscriber
     steps:
       - uses: actions/checkout@v4
 
@@ -32,17 +55,17 @@ jobs:
           aws-region: us-east-1
 
       - name: Install & build ${{ matrix.function }}
-        working-directory: modules/lambda/src/${{ matrix.function }}
+        working-directory: modules/lambda/src/${{ matrix.source_dir }}
         run: |
           npm ci
           npm run build
 
       - name: Zip ${{ matrix.function }}
-        working-directory: modules/lambda/src/${{ matrix.function }}
+        working-directory: modules/lambda/src/${{ matrix.source_dir }}
         run: zip -r ${{ matrix.function }}.zip dist
 
       - name: Upload ${{ matrix.function }} artifact
-        working-directory: modules/lambda/src/${{ matrix.function }}
+        working-directory: modules/lambda/src/${{ matrix.source_dir }}
         run: |
           aws s3 cp ${{ matrix.function }}.zip \
             s3://${{ vars.LAMBDA_ARTIFACTS_BUCKET }}/${{ matrix.function }}/dev/${{ matrix.function }}-${{ github.sha }}.zip
