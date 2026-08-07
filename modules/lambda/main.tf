@@ -60,7 +60,7 @@ resource "aws_iam_role_policy_attachment" "lambda_connect_customer_profiles" {
 resource "aws_lambda_function" "eligibility_check" {
   function_name = var.lambda_eligibility_check_function_name
   role          = aws_iam_role.eligibility_check.arn
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs24.x"
   handler       = "index.handler"
   s3_bucket     = var.s3_bucket_lambda_artifacts
   s3_key        = var.lambda_eligibility_check_s3_key
