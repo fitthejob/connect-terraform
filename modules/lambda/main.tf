@@ -23,6 +23,12 @@ resource "aws_iam_role_policy_attachment" "eligibility_check_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Required for tracing_config { mode = "Active" } on the function below
+resource "aws_iam_role_policy_attachment" "eligibility_check_xray" {
+  role       = aws_iam_role.eligibility_check.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
 # Define execution policy for getting and searching Amazon Connect customer profiles
 resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
   name = "lambda-eligibility-check-customer-profiles-policy-${var.environment}"
@@ -30,7 +36,10 @@ resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
+        Effect = "Allow"
+        # tfsec:ignore:aws-iam-no-policy-wildcards - profile:SearchProfiles and
+        # profile:GetProfile have no resource-level permissions in Connect
+        # Customer Profiles; AWS does not support scoping these to a domain ARN.
         Resource = "*"
         Action = [
           "profile:SearchProfiles",
@@ -62,6 +71,10 @@ resource "aws_lambda_function" "eligibility_check" {
     }
   }
   layers = [var.layer_arn]
+
+  tracing_config {
+    mode = "Active"
+  }
 }
 
 # Lambda alias that will update when new versions are deployed
