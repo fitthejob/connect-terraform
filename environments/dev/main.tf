@@ -36,70 +36,26 @@ module "layers" {
 }
 
 # --- Contact center prototype spec, Phase 2: EventBridge pipeline ---
-# The 4 metric-subscriber Lambda instances (contact-center-prototype-spec.md
-# Layer 4's "Lambda subscriber for real-time action" per rule). Each shares
-# the same event-metric-subscriber source but is a distinct build-matrix
-# artifact and Terraform resource, parameterized by metric name/dimension.
+# Single shared metric-subscriber Lambda for all four rules
+# (contact-center-prototype-spec.md Layer 4's "Lambda subscriber for
+# real-time action") -- one concern (event -> CloudWatch metric), branching
+# internally on detail-type rather than four separately deployed instances.
 
-module "subscriber_contact_initiated" {
+module "lambda_event_metric_subscriber" {
   source                     = "../../modules/lambda-event-metric-subscriber"
   environment                = "dev"
-  instance_name              = "contact-initiated-metric"
   s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
-  function_name              = "contact-initiated-metric-dev"
-  s3_key                     = "contact-initiated-metric/dev/contact-initiated-metric-${var.artifact_sha}.zip"
+  function_name              = "event-metric-subscriber-dev"
+  s3_key                     = "event-metric-subscriber/dev/event-metric-subscriber-${var.artifact_sha}.zip"
   layer_arn                  = module.layers.shared_deps_layer_arn
-  metric_name                = "ContactsInitiated"
-}
-
-module "subscriber_contact_transferred" {
-  source                     = "../../modules/lambda-event-metric-subscriber"
-  environment                = "dev"
-  instance_name              = "contact-transferred-metric"
-  s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
-  function_name              = "contact-transferred-metric-dev"
-  s3_key                     = "contact-transferred-metric/dev/contact-transferred-metric-${var.artifact_sha}.zip"
-  layer_arn                  = module.layers.shared_deps_layer_arn
-  metric_name                = "ContactsTransferred"
-  dimension_field            = "queue"
-}
-
-module "subscriber_contact_disconnected" {
-  source                     = "../../modules/lambda-event-metric-subscriber"
-  environment                = "dev"
-  instance_name              = "contact-disconnected-metric"
-  s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
-  function_name              = "contact-disconnected-metric-dev"
-  s3_key                     = "contact-disconnected-metric/dev/contact-disconnected-metric-${var.artifact_sha}.zip"
-  layer_arn                  = module.layers.shared_deps_layer_arn
-  metric_name                = "ContactDurationSeconds"
-  value_field                = "durationSeconds"
-}
-
-module "subscriber_verification_completed" {
-  source                     = "../../modules/lambda-event-metric-subscriber"
-  environment                = "dev"
-  instance_name              = "verification-completed-metric"
-  s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
-  function_name              = "verification-completed-metric-dev"
-  s3_key                     = "verification-completed-metric/dev/verification-completed-metric-${var.artifact_sha}.zip"
-  layer_arn                  = module.layers.shared_deps_layer_arn
-  metric_name                = "VerificationOutcome"
-  dimension_field            = "verificationStatus"
 }
 
 module "eventbridge_pipeline" {
   source      = "../../modules/eventbridge-pipeline"
   environment = "dev"
 
-  contact_initiated_subscriber_alias_arn          = module.subscriber_contact_initiated.alias_arn
-  contact_initiated_subscriber_function_name      = module.subscriber_contact_initiated.function_name
-  contact_transferred_subscriber_alias_arn        = module.subscriber_contact_transferred.alias_arn
-  contact_transferred_subscriber_function_name    = module.subscriber_contact_transferred.function_name
-  contact_disconnected_subscriber_alias_arn       = module.subscriber_contact_disconnected.alias_arn
-  contact_disconnected_subscriber_function_name   = module.subscriber_contact_disconnected.function_name
-  verification_completed_subscriber_alias_arn     = module.subscriber_verification_completed.alias_arn
-  verification_completed_subscriber_function_name = module.subscriber_verification_completed.function_name
+  subscriber_alias_arn     = module.lambda_event_metric_subscriber.alias_arn
+  subscriber_function_name = module.lambda_event_metric_subscriber.function_name
 }
 
 # --- Contact center prototype spec, Phase 1 Lambdas, now wired for real

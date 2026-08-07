@@ -1,7 +1,7 @@
 
-# IAM role for an event-metric-subscriber Lambda instance - Assume role via STS
+# IAM role for the event-metric-subscriber Lambda - Assume role via STS
 resource "aws_iam_role" "subscriber" {
-  name = "lambda-${var.instance_name}-role-${var.environment}"
+  name = "lambda-event-metric-subscriber-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -23,7 +23,7 @@ resource "aws_iam_role_policy_attachment" "subscriber_basic" {
 }
 
 resource "aws_iam_policy" "subscriber_cloudwatch" {
-  name = "lambda-${var.instance_name}-cloudwatch-policy-${var.environment}"
+  name = "lambda-event-metric-subscriber-cloudwatch-policy-${var.environment}"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -48,13 +48,16 @@ data "aws_kms_key" "lambda_default" {
   key_id = "alias/aws/lambda"
 }
 
-# Not placed in a VPC: prototype build, same rationale as
-# modules/lambda/main.tf's eligibility_check function. No DLQ on the
-# function itself -- this Lambda is invoked asynchronously by an
-# EventBridge rule target, which already has its own retry policy and a
-# dedicated per-rule DLQ configured on the rule/target (see
-# modules/eventbridge-pipeline), so a second function-level DLQ here would
-# be redundant.
+# Single shared subscriber for all four EventBridge rules -- one concern
+# (turn an event into a CloudWatch metric under the ContactCenter/Events
+# namespace), branching internally on detail-type rather than four
+# separately deployed, env-var-parameterized instances. Not placed in a
+# VPC: prototype build, same rationale as modules/lambda/main.tf's
+# eligibility_check function. No DLQ on the function itself -- this Lambda
+# is invoked asynchronously by EventBridge rule targets, which already
+# have their own retry policy and a per-rule DLQ (see
+# modules/eventbridge-pipeline), so a function-level DLQ here would be
+# redundant.
 resource "aws_lambda_function" "subscriber" {
   function_name = var.function_name
   role          = aws_iam_role.subscriber.arn
@@ -63,14 +66,7 @@ resource "aws_lambda_function" "subscriber" {
   s3_bucket     = var.s3_bucket_lambda_artifacts
   s3_key        = var.s3_key
   publish       = true
-  environment {
-    variables = {
-      METRIC_NAME     = var.metric_name
-      DIMENSION_FIELD = var.dimension_field
-      VALUE_FIELD     = var.value_field
-    }
-  }
-  layers = [var.layer_arn]
+  layers        = [var.layer_arn]
 
   kms_key_arn = data.aws_kms_key.lambda_default.arn
 
