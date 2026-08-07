@@ -99,12 +99,12 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:DisassociateLambdaFunction",
       "connect:ListLambdaFunctions",
     ]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # Could be scoped to the specific Connect instance ARN
     # (arn:aws:connect:region:account:instance/instance-id), but modules/iam
     # doesn't currently take the instance ID/alias as an input — adding that
     # is a real follow-up, not done here to keep this change to a wildcard
     # cleanup rather than a new variable + bootstrap wiring change.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 
@@ -144,10 +144,10 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lambda:PublishLayerVersion",
       "lambda:DeleteLayerVersion",
     ]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # Layer version numbers are assigned by AWS on publish and aren't known
     # ahead of time; scoping to a specific layer-version ARN isn't possible
     # before the first PublishLayerVersion call.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 
@@ -213,10 +213,10 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lex:DescribeBotAlias",
       "lex:ListBotAliases",
     ]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # lex:CreateBot's target doesn't exist before the call (the bot ID is
     # assigned by AWS on creation), so this can't be scoped ahead of a first
     # apply without an ARN pattern that hasn't been verified here.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 
@@ -228,9 +228,9 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:DisassociateBot",
       "connect:ListBots",
     ]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # See ConnectManage above — same instance-ARN scoping opportunity,
     # deferred as a follow-up rather than done here.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 
@@ -286,9 +286,9 @@ data "aws_iam_policy_document" "deploy_permissions" {
     sid     = "CallerIdentityForArnConstruction"
     effect  = "Allow"
     actions = ["sts:GetCallerIdentity"]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # sts:GetCallerIdentity has no resource-level permissions at all — it is
     # account/caller introspection, not a resource-scoped action.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 }
@@ -305,9 +305,9 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "connect:List*",
       "connect:Search*",
     ]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # See ConnectManage in deploy_permissions above — same instance-ARN
     # scoping opportunity, deferred as a follow-up rather than done here.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 
@@ -332,9 +332,9 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "lambda:GetLayerVersion",
       "lambda:ListLayerVersions",
     ]
-    # tfsec:ignore:aws-iam-no-policy-wildcards
     # See LambdaLayerManage in deploy_permissions above — layer version
     # numbers aren't known ahead of time.
+    # tfsec:ignore:aws-iam-no-policy-wildcards
     resources = ["*"]
   }
 

@@ -41,10 +41,10 @@ resource "aws_iam_policy" "lambda_customer_profiles_permissions" {
           "profile:SearchProfiles",
           "profile:GetProfile"
         ]
-        # tfsec:ignore:aws-iam-no-policy-wildcards
         # profile:SearchProfiles and profile:GetProfile have no
         # resource-level permissions in Connect Customer Profiles; AWS does
         # not support scoping these to a domain ARN.
+        # tfsec:ignore:aws-iam-no-policy-wildcards
         Resource = "*"
       }
     ]
