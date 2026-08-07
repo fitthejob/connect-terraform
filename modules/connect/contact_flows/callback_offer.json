@@ -82,6 +82,10 @@
           },
           {
             "NextAction": "EndModule",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "EndModule",
             "ErrorType": "NoMatchingError"
           }
         ]

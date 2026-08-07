@@ -39,6 +39,7 @@ const getCallbackChoice = new GetParticipantInputActionBuilder(
   .when(equalsCondition("1"), "ScheduleCallback")
   .next("EndModule")
   .onError("EndModule", "NoMatchingCondition")
+  .onError("EndModule", "InputTimeLimitExceeded")
   .onError("EndModule")
   .build();
 
