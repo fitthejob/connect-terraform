@@ -22,27 +22,54 @@ interface EventBridgeEvent {
   };
 }
 
-export const handler = async (event: EventBridgeEvent): Promise<void> => {
-  const metricName = process.env.METRIC_NAME;
-  const dimensionField = process.env.DIMENSION_FIELD as keyof EventBridgeEvent["detail"] | undefined;
-  const valueField = process.env.VALUE_FIELD as keyof EventBridgeEvent["detail"] | undefined;
+interface MetricPlan {
+  metricName: string;
+  dimensionField?: keyof EventBridgeEvent["detail"];
+  valueField?: keyof EventBridgeEvent["detail"];
+}
 
-  if (!metricName) {
-    console.error(JSON.stringify({ message: "METRIC_NAME not configured", event }));
-    return;
-  }
+// One entry per EventBridge rule this Lambda is subscribed to. All four
+// rules target this single function -- it's one concern (turn an event
+// into a CloudWatch metric), just branching on detail-type for which
+// metric/dimension applies.
+const METRIC_PLANS: Record<string, MetricPlan> = {
+  "contact.initiated": {
+    metricName: "ContactsInitiated",
+  },
+  "contact.transferred": {
+    metricName: "ContactsTransferred",
+    dimensionField: "queue",
+  },
+  "contact.disconnected": {
+    metricName: "ContactDurationSeconds",
+    valueField: "durationSeconds",
+  },
+  "verification.completed": {
+    metricName: "VerificationOutcome",
+    dimensionField: "verificationStatus",
+  },
+};
+
+export const handler = async (event: EventBridgeEvent): Promise<void> => {
+  const detailType = event["detail-type"];
+  const plan = METRIC_PLANS[detailType];
 
   console.log(JSON.stringify({
     contactId: event.detail.contactId,
-    message: `Received ${event["detail-type"]}`,
+    message: `Received ${detailType}`,
     detail: event.detail,
   }));
 
-  const value = valueField && typeof event.detail[valueField] === "number"
-    ? (event.detail[valueField] as number)
+  if (!plan) {
+    console.error(JSON.stringify({ contactId: event.detail.contactId, message: `No metric plan for detail-type "${detailType}"` }));
+    return;
+  }
+
+  const value = plan.valueField && typeof event.detail[plan.valueField] === "number"
+    ? (event.detail[plan.valueField] as number)
     : 1;
 
-  const dimensionValue = dimensionField ? event.detail[dimensionField] : undefined;
+  const dimensionValue = plan.dimensionField ? event.detail[plan.dimensionField] : undefined;
 
   try {
     await cloudwatch.send(
@@ -50,12 +77,12 @@ export const handler = async (event: EventBridgeEvent): Promise<void> => {
         Namespace: NAMESPACE,
         MetricData: [
           {
-            MetricName: metricName,
+            MetricName: plan.metricName,
             Value: value,
-            Unit: valueField ? "Seconds" : "Count",
+            Unit: plan.valueField ? "Seconds" : "Count",
             Timestamp: new Date(event.detail.timestamp),
             ...(dimensionValue
-              ? { Dimensions: [{ Name: dimensionField as string, Value: String(dimensionValue) }] }
+              ? { Dimensions: [{ Name: plan.dimensionField as string, Value: String(dimensionValue) }] }
               : {}),
           },
         ],
@@ -64,7 +91,7 @@ export const handler = async (event: EventBridgeEvent): Promise<void> => {
   } catch (error) {
     console.error(JSON.stringify({
       contactId: event.detail.contactId,
-      message: `Failed to publish metric ${metricName}`,
+      message: `Failed to publish metric ${plan.metricName}`,
       error: String(error),
     }));
     throw error; // let this land in the DLQ per the rule's retry policy

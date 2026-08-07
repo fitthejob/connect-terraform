@@ -10,29 +10,22 @@ resource "aws_cloudwatch_event_archive" "contact_center" {
 }
 
 locals {
-  # One entry per rule: detail-type to match, the subscriber Lambda alias
-  # ARN/function name for the Lambda target, and a short key used to name
-  # per-rule resources (DLQ, alarm, rule itself).
+  # One entry per rule: detail-type to match, and a short key used to name
+  # per-rule resources (DLQ, alarm, rule itself). All four rules target the
+  # same shared subscriber Lambda (var.subscriber_alias_arn) -- one
+  # concern (event -> CloudWatch metric), not four separate functions.
   rules = {
     contact_initiated = {
-      detail_type          = "contact.initiated"
-      subscriber_alias_arn = var.contact_initiated_subscriber_alias_arn
-      subscriber_name      = var.contact_initiated_subscriber_function_name
+      detail_type = "contact.initiated"
     }
     contact_transferred = {
-      detail_type          = "contact.transferred"
-      subscriber_alias_arn = var.contact_transferred_subscriber_alias_arn
-      subscriber_name      = var.contact_transferred_subscriber_function_name
+      detail_type = "contact.transferred"
     }
     contact_disconnected = {
-      detail_type          = "contact.disconnected"
-      subscriber_alias_arn = var.contact_disconnected_subscriber_alias_arn
-      subscriber_name      = var.contact_disconnected_subscriber_function_name
+      detail_type = "contact.disconnected"
     }
     verification_completed = {
-      detail_type          = "verification.completed"
-      subscriber_alias_arn = var.verification_completed_subscriber_alias_arn
-      subscriber_name      = var.verification_completed_subscriber_function_name
+      detail_type = "verification.completed"
     }
   }
 }
@@ -124,7 +117,7 @@ resource "aws_cloudwatch_event_target" "lambda" {
   rule           = aws_cloudwatch_event_rule.rule[each.key].name
   event_bus_name = aws_cloudwatch_event_bus.contact_center.name
   target_id      = "lambda-subscriber"
-  arn            = each.value.subscriber_alias_arn
+  arn            = var.subscriber_alias_arn
 
   dead_letter_config {
     arn = aws_sqs_queue.lambda_target_dlq[each.key].arn
@@ -136,7 +129,7 @@ resource "aws_lambda_permission" "allow_eventbridge" {
 
   statement_id  = "AllowEventBridge-${each.key}"
   action        = "lambda:InvokeFunction"
-  function_name = each.value.subscriber_name
+  function_name = var.subscriber_function_name
   qualifier     = "live"
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.rule[each.key].arn
