@@ -30,3 +30,29 @@ variable "allow_pull_requests" {
   type        = bool
   default     = false
 }
+
+variable "permissions_profile" {
+  description = "Which permissions profile to attach: \"deploy\" (full read/write for CI deploys) or \"pr_checks\" (read-only, for PR validation)"
+  type        = string
+
+  validation {
+    condition     = contains(["deploy", "pr_checks"], var.permissions_profile)
+    error_message = "permissions_profile must be \"deploy\" or \"pr_checks\"."
+  }
+}
+
+variable "environments" {
+  description = "Environment names this role needs scoped IAM resource access for (only used when permissions_profile = \"deploy\"), e.g. [\"dev\", \"staging\", \"prod\"]"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_artifacts_bucket" {
+  description = "S3 bucket name for Lambda/layer build artifacts"
+  type        = string
+}
+
+variable "tfstate_bucket" {
+  description = "S3 bucket name for Terraform remote state"
+  type        = string
+}
