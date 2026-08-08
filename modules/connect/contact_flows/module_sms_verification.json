@@ -155,7 +155,8 @@
         },
         "LexSessionAttributes": {
           "x-amz-lex:allow-audio-input:VerificationCodeIntent:VerificationCode": "true",
-          "x-amz-lex:allow-dtmf-input:VerificationCodeIntent:VerificationCode": "true"
+          "x-amz-lex:allow-dtmf-input:VerificationCodeIntent:VerificationCode": "true",
+          "x-amz-lex:audio:start-timeout-ms:VerificationCodeIntent:VerificationCode": "45000"
         }
       },
       "Transitions": {
