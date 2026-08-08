@@ -17,8 +17,8 @@ const eventBridge = new EventBridgeClient({ region: process.env.AWS_REGION });
 
 interface ConnectEvent {
   Details: {
-    ContactId: string;
     ContactData: {
+      ContactId: string;
       Channel: string;
       CustomerEndpoint?: { Address?: string };
     };
@@ -53,7 +53,7 @@ async function publishLookupCompleted(
 }
 
 export const handler = async (event: ConnectEvent): Promise<ConnectLambdaResponse> => {
-  const contactId = event.Details.ContactId;
+  const contactId = event.Details.ContactData.ContactId;
   const channel: ContactChannel = event.Details.ContactData.Channel === "CHAT" ? "CHAT" : "VOICE";
 
   // Voice looks up by the caller's ANI; chat has no phone number, so it

@@ -4,8 +4,8 @@ type QueueKey = "claims" | "benefits" | "authorizations" | "billing" | "general"
 
 interface ConnectEvent {
   Details: {
-    ContactId: string;
     ContactData: {
+      ContactId: string;
       Channel: string;
     };
     Parameters?: {
@@ -54,7 +54,7 @@ function queueArn(queueKey: QueueKey): string {
 }
 
 export const handler = async (event: ConnectEvent): Promise<ConnectLambdaResponse> => {
-  const contactId = event.Details.ContactId;
+  const contactId = event.Details.ContactData.ContactId;
   const channel = event.Details.ContactData.Channel === "CHAT" ? "CHAT" : "VOICE";
   const intent = event.Details.Parameters?.Intent;
   const customerStatus = event.Details.Parameters?.CustomerStatus;
