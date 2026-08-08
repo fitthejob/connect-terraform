@@ -1,0 +1,118 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "InvokeCustomerLookup",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 20,
+      "y": 20
+    },
+    "ActionMetadata": {
+      "InvokeCustomerLookup": {
+        "position": {
+          "x": 280,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "AnnounceCustomerLookupResult": {
+        "position": {
+          "x": 540,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "InvokeSmsVerification": {
+        "position": {
+          "x": 800,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "AnnounceVerificationResult": {
+        "position": {
+          "x": 1060,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "Disconnect": {
+        "position": {
+          "x": 1320,
+          "y": 20
+        },
+        "isFriendlyName": true
+      }
+    }
+  },
+  "Actions": [
+    {
+      "Identifier": "InvokeCustomerLookup",
+      "Type": "InvokeFlowModule",
+      "Parameters": {
+        "FlowModuleId": "fa99a32c-2b92-4f89-a396-c803daf005b4"
+      },
+      "Transitions": {
+        "NextAction": "AnnounceCustomerLookupResult",
+        "Errors": [
+          {
+            "NextAction": "AnnounceCustomerLookupResult",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "AnnounceCustomerLookupResult",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Customer lookup result: $.Attributes.CustomerStatus. Now testing SMS verification. Please wait for your code."
+      },
+      "Transitions": {
+        "NextAction": "InvokeSmsVerification",
+        "Errors": [
+          {
+            "NextAction": "InvokeSmsVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "InvokeSmsVerification",
+      "Type": "InvokeFlowModule",
+      "Parameters": {
+        "FlowModuleId": "7f2703b2-42db-4265-b56c-149ee0697f41"
+      },
+      "Transitions": {
+        "NextAction": "AnnounceVerificationResult",
+        "Errors": [
+          {
+            "NextAction": "AnnounceVerificationResult",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "AnnounceVerificationResult",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Verification result: $.Attributes.VerificationStatus. End of test."
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "Disconnect",
+      "Type": "DisconnectParticipant",
+      "Parameters": {}
+    }
+  ]
+}

@@ -56,6 +56,11 @@ export const handler = async (event: ConnectEvent): Promise<ConnectLambdaRespons
   const contactId = event.Details.ContactId;
   const channel: ContactChannel = event.Details.ContactData.Channel === "CHAT" ? "CHAT" : "VOICE";
 
+  // TEMPORARY debug logging -- investigating why a module-invoked call
+  // returns UNKNOWN despite the identical ANI returning KNOWN via direct
+  // aws lambda invoke. Remove once resolved.
+  console.log(JSON.stringify({ contactId, message: "DEBUG raw event", event }));
+
   // Voice looks up by the caller's ANI; chat has no phone number, so it
   // relies on an identifier the chat flow already collected and passed as
   // a contact flow parameter.
