@@ -43,6 +43,26 @@ resource "aws_iam_role_policy_attachment" "subscriber_cloudwatch" {
   policy_arn = aws_iam_policy.subscriber_cloudwatch.arn
 }
 
+# PutFunctionEventInvokeConfig validates at write-time that the function's
+# own execution role (not just the destination's resource-based policy) can
+# SendMessage to the on_failure destination -- confirmed via a live
+# InvalidParameterValueException when only the queue-side policy
+# (aws_sqs_queue_policy.subscriber_failure_dlq below) existed.
+resource "aws_iam_role_policy" "subscriber_failure_dlq" {
+  name = "lambda-event-metric-subscriber-failure-dlq-policy-${var.environment}"
+  role = aws_iam_role.subscriber.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sqs:SendMessage"
+        Resource = aws_sqs_queue.subscriber_failure_dlq.arn
+      }
+    ]
+  })
+}
+
 # AWS-managed key for encrypting the Lambda's environment variables at rest.
 data "aws_kms_key" "lambda_default" {
   key_id = "alias/aws/lambda"
