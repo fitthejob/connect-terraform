@@ -266,6 +266,11 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lex:DeleteBotAlias",
       "lex:DescribeBotAlias",
       "lex:ListBotAliases",
+      "lex:DescribeSlot",
+      "lex:CreateSlot",
+      "lex:UpdateSlot",
+      "lex:DeleteSlot",
+      "lex:ListSlots",
     ]
     # lex:CreateBot's target doesn't exist before the call (the bot ID is
     # assigned by AWS on creation), so this can't be scoped ahead of a first
@@ -496,6 +501,8 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "lex:DescribeBotAlias",
       "lex:ListBotAliases",
       "lex:ListTagsForResource",
+      "lex:DescribeSlot",
+      "lex:ListSlots",
       # Not actually read-only -- modules/lex's data "external" ->
       # create_bot_alias.sh (aws lexv2-models create/update-bot-alias)
       # unconditionally mutates the bot alias on every run, including
