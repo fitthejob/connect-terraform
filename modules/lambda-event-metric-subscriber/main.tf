@@ -91,7 +91,10 @@ resource "aws_lambda_alias" "subscriber_live" {
 # no EventBridge DLQ entry, no AWS/Events CloudWatch metric at all -- until
 # this destination_config was added.
 resource "aws_sqs_queue" "subscriber_failure_dlq" {
-  name                    = "event-metric-subscriber-failure-dlq-${var.environment}"
+  # lambda-*-${env} naming, matching every other Lambda's DLQ in this repo --
+  # required for modules/iam's sqs_scoped_resources wildcard to grant the
+  # deploy role sqs:CreateQueue on it.
+  name                    = "lambda-event-metric-subscriber-failure-dlq-${var.environment}"
   sqs_managed_sse_enabled = true
 }
 
