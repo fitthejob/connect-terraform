@@ -471,12 +471,34 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
     actions = [
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
+      "lambda:GetFunctionCodeSigningConfig",
       "lambda:GetAlias",
       "lambda:ListVersionsByFunction",
       "lambda:ListAliases",
       "lambda:GetPolicy",
     ]
     resources = local.lambda_scoped_resources
+  }
+
+  statement {
+    sid    = "LexV2ReadOnly"
+    effect = "Allow"
+    actions = [
+      "lex:DescribeBot",
+      "lex:ListBots",
+      "lex:DescribeBotLocale",
+      "lex:ListBotLocales",
+      "lex:DescribeIntent",
+      "lex:ListIntents",
+      "lex:DescribeBotVersion",
+      "lex:ListBotVersions",
+      "lex:DescribeBotAlias",
+      "lex:ListBotAliases",
+      "lex:ListTagsForResource",
+    ]
+    # See LexV2Manage in deploy_permissions above -- bot/locale/intent IDs
+    # aren't known ahead of a first apply, same unscopable reasoning.
+    resources = ["*"]
   }
 
   statement {
