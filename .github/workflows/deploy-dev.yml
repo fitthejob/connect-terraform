@@ -50,8 +50,8 @@ jobs:
           npm run build
 
       - name: Zip ${{ matrix.function }}
-        working-directory: modules/lambda/src/${{ matrix.source_dir }}
-        run: zip -r ${{ matrix.function }}.zip dist
+        working-directory: modules/lambda/src/${{ matrix.source_dir }}/dist
+        run: zip -r ../${{ matrix.function }}.zip .
 
       - name: Upload ${{ matrix.function }} artifact
         working-directory: modules/lambda/src/${{ matrix.source_dir }}
