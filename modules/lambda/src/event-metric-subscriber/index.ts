@@ -94,6 +94,6 @@ export const handler = async (event: EventBridgeEvent): Promise<void> => {
       message: `Failed to publish metric ${plan.metricName}`,
       error: String(error),
     }));
-    throw error; // let this land in the DLQ per the rule's retry policy
+    throw error; // triggers Lambda's own async-invoke retry, then its on_failure destination (see modules/lambda-event-metric-subscriber's event_invoke_config) -- EventBridge's own rule-target retry/DLQ never sees this, it only covers handoff failures
   }
 };
