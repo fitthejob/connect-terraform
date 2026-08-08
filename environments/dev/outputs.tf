@@ -13,6 +13,16 @@ output "callback_offer_module_id" {
   value       = module.connect.callback_offer_module_id
 }
 
+output "module_customer_lookup_id" {
+  description = "Contact flow module ID of the CustomerLookup flow module"
+  value       = module.connect.module_customer_lookup_id
+}
+
+output "module_sms_verification_id" {
+  description = "Contact flow module ID of the SmsVerification flow module"
+  value       = module.connect.module_sms_verification_id
+}
+
 output "connect_instance_id" {
   description = "Amazon Connect instance ID"
   value       = module.connect.connect_instance_id

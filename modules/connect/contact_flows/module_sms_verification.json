@@ -1,0 +1,441 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "SendCode",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 20,
+      "y": 20
+    },
+    "ActionMetadata": {
+      "SendCode": {
+        "position": {
+          "x": 280,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "CollectCode": {
+        "position": {
+          "x": 540,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SendFailed": {
+        "position": {
+          "x": 540,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "VerifyCode": {
+        "position": {
+          "x": 800,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "RetryPrompt": {
+        "position": {
+          "x": 800,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "EndModule": {
+        "position": {
+          "x": 800,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "CheckVerificationResult": {
+        "position": {
+          "x": 1060,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "VerificationFailed": {
+        "position": {
+          "x": 1060,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "RetryLoop": {
+        "position": {
+          "x": 1060,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "SetVerified": {
+        "position": {
+          "x": 1320,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetExpiredAttributes": {
+        "position": {
+          "x": 1320,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "MaxAttemptsExceeded": {
+        "position": {
+          "x": 1320,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SetFailedAttributes": {
+        "position": {
+          "x": 1320,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "SetMaxAttemptsAttributes": {
+        "position": {
+          "x": 1580,
+          "y": 20
+        },
+        "isFriendlyName": true
+      }
+    }
+  },
+  "Actions": [
+    {
+      "Identifier": "SendCode",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:sms-verification-dev:live",
+        "LambdaInvocationAttributes": {
+          "Action": "send",
+          "PhoneNumber": "$.CustomerEndpoint.Address"
+        }
+      },
+      "Transitions": {
+        "NextAction": "CollectCode",
+        "Errors": [
+          {
+            "NextAction": "SendFailed",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SendFailed",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "We're sorry, we weren't able to send a verification code. We'll continue without verifying your identity."
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "CollectCode",
+      "Type": "ConnectParticipantWithLexBot",
+      "Parameters": {
+        "Text": "Please say or enter the 6-digit code we just sent you.",
+        "LexV2Bot": {
+          "AliasArn": "arn:aws:lex:us-east-1:084396578198:bot-alias/AOEWLIZGX8/H5SJSUACSG"
+        },
+        "LexSessionAttributes": {
+          "x-amz-lex:allow-audio-input:VerificationCodeIntent:VerificationCode": "true",
+          "x-amz-lex:allow-dtmf-input:VerificationCodeIntent:VerificationCode": "true"
+        }
+      },
+      "Transitions": {
+        "NextAction": "RetryPrompt",
+        "Conditions": [
+          {
+            "NextAction": "VerifyCode",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "VerificationCodeIntent"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "RetryPrompt",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "RetryPrompt",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "RetryPrompt",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "RetryLoop",
+      "Type": "Loop",
+      "Parameters": {
+        "LoopCount": 2
+      },
+      "Transitions": {
+        "NextAction": "CollectCode",
+        "Conditions": [
+          {
+            "NextAction": "CollectCode",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "ContinueLooping"
+              ]
+            }
+          },
+          {
+            "NextAction": "MaxAttemptsExceeded",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "DoneLooping"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "RetryPrompt",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "We're sorry, we didn't catch that."
+      },
+      "Transitions": {
+        "NextAction": "RetryLoop",
+        "Errors": [
+          {
+            "NextAction": "RetryLoop",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "VerifyCode",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:sms-verification-dev:live",
+        "LambdaInvocationAttributes": {
+          "Action": "verify",
+          "Code": "$.Lex.Slots.VerificationCode"
+        }
+      },
+      "Transitions": {
+        "NextAction": "CheckVerificationResult",
+        "Errors": [
+          {
+            "NextAction": "VerificationFailed",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "CheckVerificationResult",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.External.verificationResult"
+      },
+      "Transitions": {
+        "NextAction": "VerificationFailed",
+        "Conditions": [
+          {
+            "NextAction": "SetVerified",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "VERIFIED"
+              ]
+            }
+          },
+          {
+            "NextAction": "RetryPrompt",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetExpiredAttributes",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "EXPIRED"
+              ]
+            }
+          },
+          {
+            "NextAction": "MaxAttemptsExceeded",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "MAX_ATTEMPTS_EXCEEDED"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "VerificationFailed",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetVerified",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "VerificationStatus": "VERIFIED"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "VerificationFailed",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "We're sorry, we weren't able to verify your identity. We'll continue without verification."
+      },
+      "Transitions": {
+        "NextAction": "SetFailedAttributes",
+        "Errors": [
+          {
+            "NextAction": "SetFailedAttributes",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetFailedAttributes",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "VerificationStatus": "FAILED"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "MaxAttemptsExceeded",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "We're sorry, we weren't able to verify your identity after several attempts. We'll continue without verification."
+      },
+      "Transitions": {
+        "NextAction": "SetMaxAttemptsAttributes",
+        "Errors": [
+          {
+            "NextAction": "SetMaxAttemptsAttributes",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetMaxAttemptsAttributes",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "VerificationStatus": "MAX_ATTEMPTS_EXCEEDED"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetExpiredAttributes",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "VerificationStatus": "EXPIRED"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "EndModule",
+      "Type": "EndFlowModuleExecution",
+      "Parameters": {}
+    }
+  ],
+  "Settings": {
+    "InputParameters": [],
+    "OutputParameters": [],
+    "Transitions": [
+      {
+        "DisplayName": "Success",
+        "ReferenceName": "Success",
+        "Description": ""
+      },
+      {
+        "DisplayName": "Error",
+        "ReferenceName": "Error",
+        "Description": ""
+      }
+    ]
+  }
+}
