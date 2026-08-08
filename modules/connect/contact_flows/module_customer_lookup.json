@@ -1,0 +1,200 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "InvokeCustomerLookup",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 20,
+      "y": 20
+    },
+    "ActionMetadata": {
+      "InvokeCustomerLookup": {
+        "position": {
+          "x": 280,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "CheckCustomerStatus": {
+        "position": {
+          "x": 540,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetUnknownAttributes": {
+        "position": {
+          "x": 540,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SetKnownAttributes": {
+        "position": {
+          "x": 800,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetSuspendedAttributes": {
+        "position": {
+          "x": 800,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "EndModule": {
+        "position": {
+          "x": 800,
+          "y": 420
+        },
+        "isFriendlyName": true
+      }
+    }
+  },
+  "Actions": [
+    {
+      "Identifier": "InvokeCustomerLookup",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:customer-lookup-dev:live"
+      },
+      "Transitions": {
+        "NextAction": "CheckCustomerStatus",
+        "Errors": [
+          {
+            "NextAction": "SetUnknownAttributes",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "CheckCustomerStatus",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.External.customerStatus"
+      },
+      "Transitions": {
+        "NextAction": "SetUnknownAttributes",
+        "Conditions": [
+          {
+            "NextAction": "SetKnownAttributes",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "KNOWN"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetSuspendedAttributes",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "SUSPENDED"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetUnknownAttributes",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "UNKNOWN"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "SetUnknownAttributes",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetKnownAttributes",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CustomerStatus": "KNOWN",
+          "CustomerId": "$.External.customerId",
+          "CustomerTier": "$.External.customerTier"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetSuspendedAttributes",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CustomerStatus": "SUSPENDED",
+          "CustomerId": "$.External.customerId",
+          "CustomerTier": "$.External.customerTier"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetUnknownAttributes",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "CustomerStatus": "UNKNOWN"
+        }
+      },
+      "Transitions": {
+        "NextAction": "EndModule",
+        "Errors": [
+          {
+            "NextAction": "EndModule",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "EndModule",
+      "Type": "EndFlowModuleExecution",
+      "Parameters": {}
+    }
+  ],
+  "Settings": {
+    "InputParameters": [],
+    "OutputParameters": [],
+    "Transitions": [
+      {
+        "DisplayName": "Success",
+        "ReferenceName": "Success",
+        "Description": ""
+      },
+      {
+        "DisplayName": "Error",
+        "ReferenceName": "Error",
+        "Description": ""
+      }
+    ]
+  }
+}

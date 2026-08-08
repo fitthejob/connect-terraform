@@ -72,3 +72,13 @@ output "callback_offer_module_id" {
   description = "Contact flow module ID of the CallbackOffer flow module"
   value       = aws_connect_contact_flow_module.callback_offer.contact_flow_module_id
 }
+
+output "module_customer_lookup_id" {
+  description = "Contact flow module ID of the CustomerLookup flow module"
+  value       = aws_connect_contact_flow_module.module_customer_lookup.contact_flow_module_id
+}
+
+output "module_sms_verification_id" {
+  description = "Contact flow module ID of the SmsVerification flow module"
+  value       = aws_connect_contact_flow_module.module_sms_verification.contact_flow_module_id
+}

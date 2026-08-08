@@ -7,11 +7,13 @@
   "scripts": {
     "generate:main-inbound-flow": "tsx scripts/main-inbound-flow.ts",
     "generate:callback-offer-flow": "tsx scripts/callback-offer-flow.ts",
+    "generate:module-customer-lookup-flow": "tsx scripts/module-customer-lookup-flow.ts",
+    "generate:module-sms-verification-flow": "tsx scripts/module-sms-verification-flow.ts",
     "validate:flow-module": "tsx scripts/validate-flow-module.ts"
   },
   "dependencies": {
     "@aws-sdk/client-connect": "^3.0.0",
-    "@fitthejob/connect-flow-builder": "^0.2.3"
+    "@fitthejob/connect-flow-builder": "^0.2.4"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

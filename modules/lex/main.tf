@@ -147,6 +147,58 @@ resource "aws_lexv2models_intent" "billing" {
   }
 }
 
+# Captures a spoken verification code (module-sms-verification's Lex path,
+# alongside a DTMF path in the same module for keyed-in entry). Separate
+# from the queue-selection intents above -- deliberately no sample
+# utterances that overlap with digit-only phrases like ClaimsIntent's "one",
+# to avoid NLU misclassification between a queue choice and a spoken code.
+resource "aws_lexv2models_intent" "verification_code" {
+  bot_id      = aws_lexv2models_bot.bot.id
+  bot_version = "DRAFT"
+  locale_id   = aws_lexv2models_bot_locale.en_us.locale_id
+  name        = "VerificationCodeIntent"
+
+  sample_utterance {
+    utterance = "my code is {VerificationCode}"
+  }
+  sample_utterance {
+    utterance = "the code is {VerificationCode}"
+  }
+  sample_utterance {
+    utterance = "{VerificationCode}"
+  }
+}
+
+# AMAZON.AlphaNumeric (not AMAZON.Number) preserves the exact digit string
+# Lex heard, including leading zeros -- AMAZON.Number would parse "007123"
+# as the integer 7123, breaking exact-match verification against the code
+# stored by sms-verification's DynamoDB record.
+resource "aws_lexv2models_slot" "verification_code" {
+  bot_id      = aws_lexv2models_bot.bot.id
+  bot_version = "DRAFT"
+  intent_id   = aws_lexv2models_intent.verification_code.intent_id
+  locale_id   = aws_lexv2models_bot_locale.en_us.locale_id
+  name        = "VerificationCode"
+
+  slot_type_id = "AMAZON.AlphaNumeric"
+
+  value_elicitation_setting {
+    slot_constraint = "Required"
+
+    prompt_specification {
+      max_retries = 2
+
+      message_group {
+        message {
+          plain_text_message {
+            value = "Please say the 6-digit code we sent you."
+          }
+        }
+      }
+    }
+  }
+}
+
 resource "aws_lexv2models_bot_version" "v1" {
   bot_id      = aws_lexv2models_bot.bot.id
   description = "Initial published version"

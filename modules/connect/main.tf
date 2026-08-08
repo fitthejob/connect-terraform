@@ -139,6 +139,26 @@ resource "aws_connect_contact_flow_module" "callback_offer" {
   }
 }
 
+resource "aws_connect_contact_flow_module" "module_customer_lookup" {
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Module-CustomerLookup-${var.environment}"
+  description = "Invokes customer-lookup and sets CustomerStatus/CustomerId/CustomerTier contact attributes"
+  content     = file("${path.module}/contact_flows/module_customer_lookup.json")
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_connect_contact_flow_module" "module_sms_verification" {
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Module-SmsVerification-${var.environment}"
+  description = "Sends and verifies an SMS code, sets VerificationStatus contact attribute"
+  content     = file("${path.module}/contact_flows/module_sms_verification.json")
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # aws_connect_bot_association only supports Lex V1 bots in this provider
 # (no lex_v2_bot block — checked schemas directly, and HashiCorp's tracking
 # issue for V2 support, github.com/hashicorp/terraform-provider-aws/issues/30869,
