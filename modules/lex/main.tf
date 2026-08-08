@@ -197,6 +197,22 @@ resource "aws_lexv2models_slot" "verification_code" {
       }
     }
   }
+
+  # Confirmed hashicorp/terraform-provider-aws issue (open since April
+  # 2024): aws_lexv2models_slot's prompt_specification triggers
+  # "Provider produced inconsistent result after apply" because AWS
+  # auto-populates several fields we never set (allow_interrupt,
+  # message_selection_strategy, and a full 3-entry
+  # prompt_attempts_specification set with nested DTMF/audio timing) that
+  # the provider's schema doesn't correctly mark as Computed. The slot
+  # still gets created correctly server-side; Terraform just can't
+  # reconcile its own plan against what AWS returns. Ignoring the whole
+  # nested block rather than hardcoding AWS's defaults ourselves, since
+  # those defaults aren't something this repo actually controls and
+  # hardcoding them would silently drift if AWS ever changes them.
+  lifecycle {
+    ignore_changes = [value_elicitation_setting]
+  }
 }
 
 resource "aws_lexv2models_bot_version" "v1" {
