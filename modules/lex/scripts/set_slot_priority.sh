@@ -28,8 +28,11 @@
 # is that omitting it could wipe the intent's existing utterances.
 set -euo pipefail
 
-eval "$(jq -r '@sh "BOT_ID=\(.bot_id) LOCALE_ID=\(.locale_id) INTENT_ID=\(.intent_id) INTENT_NAME=\(.intent_name) SLOT_ID=\(.slot_id)"')"
-SAMPLE_UTTERANCES_JSON=$(jq -r '.sample_utterances_json')
+# Read stdin once -- a second `jq` reading from stdin directly would get
+# nothing, since the first jq invocation already consumed the pipe.
+QUERY_JSON=$(cat)
+eval "$(echo "$QUERY_JSON" | jq -r '@sh "BOT_ID=\(.bot_id) LOCALE_ID=\(.locale_id) INTENT_ID=\(.intent_id) INTENT_NAME=\(.intent_name) SLOT_ID=\(.slot_id)"')"
+SAMPLE_UTTERANCES_JSON=$(echo "$QUERY_JSON" | jq -r '.sample_utterances_json')
 
 echo "set_slot_priority: BOT_ID='$BOT_ID' LOCALE_ID='$LOCALE_ID' INTENT_ID='$INTENT_ID' SLOT_ID='$SLOT_ID'" >&2
 
