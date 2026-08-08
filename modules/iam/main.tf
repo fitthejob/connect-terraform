@@ -472,6 +472,7 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
       "lambda:GetFunctionCodeSigningConfig",
+      "lambda:GetFunctionEventInvokeConfig",
       "lambda:GetAlias",
       "lambda:ListVersionsByFunction",
       "lambda:ListAliases",
@@ -495,6 +496,17 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "lex:DescribeBotAlias",
       "lex:ListBotAliases",
       "lex:ListTagsForResource",
+      # Not actually read-only -- modules/lex's data "external" ->
+      # create_bot_alias.sh (aws lexv2-models create/update-bot-alias)
+      # unconditionally mutates the bot alias on every run, including
+      # `terraform plan`, because Terraform always executes a `data
+      # "external"` program's script regardless of plan vs apply. Granted
+      # here as a pragmatic unblock (confirmed live: pr-checks' plan failed
+      # with AccessDenied on UpdateBotAlias) -- see CLAUDE.md TODOs
+      # (2026-08-08) for the real fix (make the script plan-safe, or move
+      # alias creation out of a data source entirely).
+      "lex:CreateBotAlias",
+      "lex:UpdateBotAlias",
     ]
     # See LexV2Manage in deploy_permissions above -- bot/locale/intent IDs
     # aren't known ahead of a first apply, same unscopable reasoning.
