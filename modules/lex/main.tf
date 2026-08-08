@@ -245,6 +245,38 @@ locals {
   }))
 }
 
+# aws_lexv2models_intent's slot_priority block requires a real slot_id,
+# which only exists after aws_lexv2models_slot is created -- but
+# aws_lexv2models_slot requires intent_id, which only exists after
+# aws_lexv2models_intent is created. Each resource needs a real output
+# value from the other in both directions, which is a genuine cycle
+# Terraform's dependency graph cannot express (confirmed: matches
+# hashicorp/terraform-provider-aws#39948 exactly, an open, unresolved
+# bug -- depends_on cannot fix this, since it only orders resources that
+# need each other's *timing*, not resources that need each other's
+# *values* bidirectionally). Omitting slot_priority avoids the Terraform
+# cycle but isn't optional at the Lex API level either: BuildBotLocale
+# fails outright without it (confirmed live: "Slot ids [VerificationCode]
+# in intent VerificationCodeIntent don't define a slot priority"). Same
+# data "external" workaround as create_bot_alias.sh/build_bot_locale.sh --
+# an imperative UpdateIntent call once both real IDs already exist in
+# state, run before the build so the build never fails on a missing
+# priority.
+data "external" "slot_priority" {
+  program = ["bash", "${path.module}/scripts/set_slot_priority.sh"]
+
+  query = {
+    bot_id      = aws_lexv2models_bot.bot.id
+    locale_id   = aws_lexv2models_bot_locale.en_us.locale_id
+    intent_id   = aws_lexv2models_intent.verification_code.intent_id
+    intent_name = aws_lexv2models_intent.verification_code.name
+    slot_id     = aws_lexv2models_slot.verification_code.slot_id
+    sample_utterances_json = jsonencode([
+      for u in aws_lexv2models_intent.verification_code.sample_utterance : { utterance = u.utterance }
+    ])
+  }
+}
+
 # aws_lexv2models_bot_version.CreateBotVersion snapshots whatever state
 # DRAFT is in -- it does not itself build DRAFT first, and no resource in
 # this file was ever calling BuildBotLocale (a distinct, mandatory step
@@ -254,8 +286,10 @@ locals {
 # alias isn't built." Same data "external" pattern as
 # scripts/create_bot_alias.sh -- BuildBotLocale is asynchronous, so the
 # script polls DescribeBotLocale until a terminal status before returning,
-# and this resource must depend on every intent/slot so a genuinely stale
-# build is never snapshotted into a new version.
+# and this resource must depend on every intent/slot (and on
+# data.external.slot_priority, so a still-missing priority never reaches
+# a build attempt) so a genuinely stale build is never snapshotted into a
+# new version.
 data "external" "build_bot_locale" {
   program = ["bash", "${path.module}/scripts/build_bot_locale.sh"]
 
@@ -265,6 +299,7 @@ data "external" "build_bot_locale" {
   }
 
   depends_on = [
+    data.external.slot_priority,
     aws_lexv2models_intent.fallback,
     aws_lexv2models_intent.claims,
     aws_lexv2models_intent.benefits,
