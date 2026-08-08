@@ -159,6 +159,10 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "lambda:RemovePermission",
       "lambda:TagResource",
       "lambda:UntagResource",
+      "lambda:GetFunctionEventInvokeConfig",
+      "lambda:PutFunctionEventInvokeConfig",
+      "lambda:UpdateFunctionEventInvokeConfig",
+      "lambda:DeleteFunctionEventInvokeConfig",
     ]
     resources = local.lambda_scoped_resources
   }
