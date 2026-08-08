@@ -498,11 +498,72 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
       "iam:GetRole",
       "iam:GetPolicy",
       "iam:GetPolicyVersion",
+      "iam:GetRolePolicy",
       "iam:ListRolePolicies",
       "iam:ListAttachedRolePolicies",
       "iam:ListPolicyVersions",
     ]
     resources = local.iam_scoped_resources
+  }
+
+  statement {
+    sid    = "SqsReadOnly"
+    effect = "Allow"
+    actions = [
+      "sqs:GetQueueAttributes",
+      "sqs:GetQueueUrl",
+      "sqs:ListQueueTags",
+    ]
+    resources = local.sqs_scoped_resources
+  }
+
+  statement {
+    sid    = "DynamoDbReadOnly"
+    effect = "Allow"
+    actions = [
+      "dynamodb:DescribeTable",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:DescribeContinuousBackups",
+      "dynamodb:ListTagsOfResource",
+    ]
+    resources = local.dynamodb_scoped_resources
+  }
+
+  statement {
+    sid    = "LambdaKmsKeyReadOnly"
+    effect = "Allow"
+    # Same alias/aws/lambda AWS-managed key every Lambda module's
+    # data "aws_kms_key" "lambda_default" reads -- see LambdaKmsKeyRead in
+    # deploy_permissions above. kms:DescribeKey has no useful resource-level
+    # scoping for an AWS-managed key looked up by alias.
+    actions   = ["kms:DescribeKey"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "EventBridgePipelineReadOnly"
+    effect = "Allow"
+    actions = [
+      "events:DescribeEventBus",
+      "events:DescribeRule",
+      "events:ListRules",
+      "events:ListTargetsByRule",
+      "events:DescribeArchive",
+      "events:ListTagsForResource",
+    ]
+    # See EventBridgePipelineManage in deploy_permissions above -- same
+    # unscopable-ahead-of-time reasoning.
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "CloudWatchAlarmReadOnly"
+    effect = "Allow"
+    actions = [
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:ListTagsForResource",
+    ]
+    resources = ["*"]
   }
 
   statement {
