@@ -1,43 +1,50 @@
 {
   "Version": "2019-10-30",
-  "StartAction": "InvokeCustomerLookup",
+  "StartAction": "EnableLogging",
   "Metadata": {
     "entryPointPosition": {
       "x": 20,
       "y": 20
     },
     "ActionMetadata": {
-      "InvokeCustomerLookup": {
+      "EnableLogging": {
         "position": {
           "x": 280,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "AnnounceCustomerLookupResult": {
+      "InvokeCustomerLookup": {
         "position": {
           "x": 540,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "InvokeSmsVerification": {
+      "AnnounceCustomerLookupResult": {
         "position": {
           "x": 800,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "AnnounceVerificationResult": {
+      "InvokeSmsVerification": {
         "position": {
           "x": 1060,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "Disconnect": {
+      "AnnounceVerificationResult": {
         "position": {
           "x": 1320,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "Disconnect": {
+        "position": {
+          "x": 1580,
           "y": 20
         },
         "isFriendlyName": true
@@ -45,6 +52,16 @@
     }
   },
   "Actions": [
+    {
+      "Identifier": "EnableLogging",
+      "Type": "UpdateFlowLoggingBehavior",
+      "Parameters": {
+        "FlowLoggingBehavior": "Enabled"
+      },
+      "Transitions": {
+        "NextAction": "InvokeCustomerLookup"
+      }
+    },
     {
       "Identifier": "InvokeCustomerLookup",
       "Type": "InvokeFlowModule",

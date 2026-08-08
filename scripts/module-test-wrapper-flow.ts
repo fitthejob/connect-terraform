@@ -3,6 +3,7 @@ import {
   FlowBuilder,
   InvokeFlowModuleActionBuilder,
   MessageParticipantActionBuilder,
+  UpdateFlowLoggingBehaviorActionBuilder,
 } from "@fitthejob/connect-flow-builder";
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -71,8 +72,22 @@ const invokeCustomerLookup = new InvokeFlowModuleActionBuilder(
   .onError("AnnounceCustomerLookupResult")
   .build();
 
+// Flow logging is per-flow, not instance-wide -- even though
+// /aws/connect/mini-connect is enabled at the instance level, a flow only
+// actually emits log entries once a "Set logging behavior" block runs.
+// Enabling here propagates forward to both invoked modules for the rest of
+// the contact segment (AWS-documented behavior), which is what makes this
+// wrapper actually useful for live action-by-action debugging.
+const enableLogging = new UpdateFlowLoggingBehaviorActionBuilder(
+  "EnableLogging",
+)
+  .enabled()
+  .next("InvokeCustomerLookup")
+  .build();
+
 const flow = new FlowBuilder("ModuleTestWrapper")
-  .startWith(invokeCustomerLookup)
+  .startWith(enableLogging)
+  .add(invokeCustomerLookup)
   .add(announceCustomerLookupResult)
   .add(invokeSmsVerification)
   .add(announceVerificationResult)

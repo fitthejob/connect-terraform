@@ -245,6 +245,36 @@ locals {
   }))
 }
 
+# aws_lexv2models_bot_version.CreateBotVersion snapshots whatever state
+# DRAFT is in -- it does not itself build DRAFT first, and no resource in
+# this file was ever calling BuildBotLocale (a distinct, mandatory step
+# that compiles a bot's intents/slots into a working NLU model). Every
+# published version was therefore silently unbuilt; confirmed live via
+# Connect flow logs, "Couldn't start a conversation with bot alias ... The
+# alias isn't built." Same data "external" pattern as
+# scripts/create_bot_alias.sh -- BuildBotLocale is asynchronous, so the
+# script polls DescribeBotLocale until a terminal status before returning,
+# and this resource must depend on every intent/slot so a genuinely stale
+# build is never snapshotted into a new version.
+data "external" "build_bot_locale" {
+  program = ["bash", "${path.module}/scripts/build_bot_locale.sh"]
+
+  query = {
+    bot_id    = aws_lexv2models_bot.bot.id
+    locale_id = aws_lexv2models_bot_locale.en_us.locale_id
+  }
+
+  depends_on = [
+    aws_lexv2models_intent.fallback,
+    aws_lexv2models_intent.claims,
+    aws_lexv2models_intent.benefits,
+    aws_lexv2models_intent.authorizations,
+    aws_lexv2models_intent.billing,
+    aws_lexv2models_intent.verification_code,
+    aws_lexv2models_slot.verification_code,
+  ]
+}
+
 resource "aws_lexv2models_bot_version" "v1" {
   bot_id      = aws_lexv2models_bot.bot.id
   description = "Published version -- content hash ${local.lex_content_hash}"
@@ -254,6 +284,8 @@ resource "aws_lexv2models_bot_version" "v1" {
       source_bot_version = "DRAFT"
     }
   }
+
+  depends_on = [data.external.build_bot_locale]
 
   lifecycle {
     # create_before_destroy is required, not just nice-to-have: Lex refuses
