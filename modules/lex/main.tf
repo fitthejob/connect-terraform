@@ -215,14 +215,56 @@ resource "aws_lexv2models_slot" "verification_code" {
   }
 }
 
+# aws_lexv2models_bot_version snapshots DRAFT once at creation and has no
+# built-in mechanism to detect that DRAFT's intents/slots changed later --
+# none of its own arguments (bot_id, description, locale_specification)
+# change just because an intent/slot resource elsewhere in this file did,
+# so Terraform sees no diff and never republishes. Confirmed live: the bot
+# alias kept serving a version that predated VerificationCodeIntent/slot
+# entirely, so ConnectParticipantWithLexBot could never match it -- every
+# attempt silently fell through to the retry loop with zero Lex-side error,
+# because from Lex's perspective the utterance simply didn't match any
+# intent that existed in the version actually being served. Embedding a
+# hash of every intent/slot's meaningful content into `description` forces
+# a real diff (and therefore a new published version + republish) whenever
+# any of them changes.
+locals {
+  lex_content_hash = md5(jsonencode({
+    fallback = {
+      parent_intent_signature = aws_lexv2models_intent.fallback.parent_intent_signature
+    }
+    claims                   = [for u in aws_lexv2models_intent.claims.sample_utterance : u.utterance]
+    benefits                 = [for u in aws_lexv2models_intent.benefits.sample_utterance : u.utterance]
+    authorizations           = [for u in aws_lexv2models_intent.authorizations.sample_utterance : u.utterance]
+    billing                  = [for u in aws_lexv2models_intent.billing.sample_utterance : u.utterance]
+    verification_code_intent = [for u in aws_lexv2models_intent.verification_code.sample_utterance : u.utterance]
+    verification_code_slot = {
+      slot_type_id = aws_lexv2models_slot.verification_code.slot_type_id
+      name         = aws_lexv2models_slot.verification_code.name
+    }
+  }))
+}
+
 resource "aws_lexv2models_bot_version" "v1" {
   bot_id      = aws_lexv2models_bot.bot.id
-  description = "Initial published version"
+  description = "Published version -- content hash ${local.lex_content_hash}"
 
   locale_specification = {
     (aws_lexv2models_bot_locale.en_us.locale_id) = {
       source_bot_version = "DRAFT"
     }
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      aws_lexv2models_intent.fallback,
+      aws_lexv2models_intent.claims,
+      aws_lexv2models_intent.benefits,
+      aws_lexv2models_intent.authorizations,
+      aws_lexv2models_intent.billing,
+      aws_lexv2models_intent.verification_code,
+      aws_lexv2models_slot.verification_code,
+    ]
   }
 }
 
