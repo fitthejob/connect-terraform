@@ -367,6 +367,7 @@ data "aws_iam_policy_document" "deploy_permissions_contact_center" {
       "dynamodb:UpdateTimeToLive",
       "dynamodb:DescribeTimeToLive",
       "dynamodb:DescribeContinuousBackups",
+      "dynamodb:UpdateContinuousBackups",
       "dynamodb:TagResource",
       "dynamodb:UntagResource",
       "dynamodb:ListTagsOfResource",
