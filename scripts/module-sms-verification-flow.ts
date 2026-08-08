@@ -71,6 +71,21 @@ const collectCode = new ConnectParticipantWithLexBotActionBuilder(
     "x-amz-lex:allow-dtmf-input:VerificationCodeIntent:VerificationCode",
     "true",
   )
+  // 45s -- generous relative to a real texted-code readback, deliberately
+  // sized to also allow looking the code up via DynamoDB CLI during manual
+  // testing (real SMS delivery is blocked on pending toll-free carrier
+  // registration -- see CLAUDE.md TODOs, 2026-08-08). LexTimeoutSeconds.Text
+  // (a connect-flow-builder method) is NOT a real Connect parameter --
+  // confirmed via a live InvalidContactFlowModuleException regardless of
+  // value type. The real, documented mechanism is entirely via
+  // LexSessionAttributes: x-amz-lex:audio:start-timeout-ms controls how
+  // long Lex waits before assuming the caller isn't going to speak (voice
+  // input specifically; default 4000ms, max undocumented but under the
+  // related max-length-ms's 55000ms ceiling).
+  .sessionAttribute(
+    "x-amz-lex:audio:start-timeout-ms:VerificationCodeIntent:VerificationCode",
+    "45000",
+  )
   .whenIntentEquals("VerificationCodeIntent", "VerifyCode")
   .onInputTimeLimitExceeded("RetryPrompt")
   .onNoMatchingCondition("RetryPrompt")
