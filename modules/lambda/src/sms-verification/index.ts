@@ -26,8 +26,8 @@ const eventBridge = new EventBridgeClient({ region: process.env.AWS_REGION });
 
 interface ConnectEvent {
   Details: {
-    ContactId: string;
     ContactData: {
+      ContactId: string;
       Channel: string;
     };
     Parameters?: {
@@ -172,13 +172,7 @@ async function handleVerify(
 }
 
 export const handler = async (event: ConnectEvent): Promise<ConnectLambdaResponse> => {
-  // TEMPORARY debug logging -- investigating why DynamoDB PutCommand fails
-  // with "Missing the key contactId in the item" on every real
-  // Connect-triggered call despite direct aws lambda invoke succeeding
-  // with an identical-looking payload shape. Remove once resolved.
-  console.log(JSON.stringify({ message: "DEBUG raw event", event }));
-
-  const contactId = event.Details.ContactId;
+  const contactId = event.Details.ContactData.ContactId;
   const channel: ContactChannel = event.Details.ContactData.Channel === "CHAT" ? "CHAT" : "VOICE";
   const action = event.Details.Parameters?.Action;
 

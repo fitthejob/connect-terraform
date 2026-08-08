@@ -22,8 +22,8 @@ const FLOW_EVENT_TYPES: readonly FlowEventType[] = [
 
 interface ConnectEvent {
   Details: {
-    ContactId: string;
     ContactData: {
+      ContactId: string;
       Channel: string;
     };
     Parameters?: {
@@ -42,7 +42,7 @@ function isFlowEventType(value: string | undefined): value is FlowEventType {
 }
 
 export const handler = async (event: ConnectEvent): Promise<ConnectLambdaResponse> => {
-  const contactId = event.Details.ContactId;
+  const contactId = event.Details.ContactData.ContactId;
   const channel: ContactChannel = event.Details.ContactData.Channel === "CHAT" ? "CHAT" : "VOICE";
   const params = event.Details.Parameters ?? {};
 
