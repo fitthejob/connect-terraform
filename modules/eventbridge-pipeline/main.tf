@@ -122,6 +122,15 @@ resource "aws_cloudwatch_event_target" "lambda" {
   dead_letter_config {
     arn = aws_sqs_queue.lambda_target_dlq[each.key].arn
   }
+
+  # AWS's default (24h / 185 attempts) is too tolerant for this pipeline --
+  # these events feed CloudWatch metrics, where a datapoint published hours
+  # or a day late is useless; failing fast to the DLQ surfaces real problems
+  # via the DLQ-depth alarm instead of silently retrying for a day.
+  retry_policy {
+    maximum_retry_attempts       = 3
+    maximum_event_age_in_seconds = 300
+  }
 }
 
 resource "aws_lambda_permission" "allow_eventbridge" {
