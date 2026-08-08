@@ -12,7 +12,7 @@ export const handler = async (event: any) => {
   try {
     const command = new SearchProfilesCommand({
       DomainName: domainName,
-      KeyName: "PhoneNumber",
+      KeyName: "_phone",
       Values: [phoneNumber],
     });
 

@@ -74,10 +74,22 @@ export const handler = async (event: ConnectEvent): Promise<ConnectLambdaRespons
       throw new Error("No customer identifier available on the contact");
     }
 
+    // "PhoneNumber" and "_customerId" are not valid SearchProfiles KeyName
+    // values -- Customer Profiles only recognizes a fixed set of predefined
+    // keys (_phone, _email, _account, _profileId, _fullName, etc; confirmed
+    // against a live domain, which rejects arbitrary field names with
+    // "KeyName ... is not defined in the domain"). Voice's ANI maps to
+    // _phone. Chat's key is still TODO -- no chat flow exists yet to confirm
+    // what CustomerIdentifier actually holds or which predefined key it
+    // should map to (see CLAUDE.md TODOs, 2026-08-08).
+    if (channel === "CHAT") {
+      throw new Error("Chat customer lookup KeyName not yet determined -- see CLAUDE.md TODOs");
+    }
+
     const response = await customerProfiles.send(
       new SearchProfilesCommand({
         DomainName: domainName,
-        KeyName: channel === "VOICE" ? "PhoneNumber" : "_customerId",
+        KeyName: "_phone",
         Values: [identifier],
       }),
     );
