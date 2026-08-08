@@ -153,6 +153,7 @@ jobs:
       - name: Capture Terraform outputs
         id: tf-outputs
         run: |
+          set -euo pipefail
           echo "sandbox_flow_id=$(terraform output -raw validation_sandbox_contact_flow_id)" >> "$GITHUB_OUTPUT"
           echo "instance_id=$(terraform output -raw connect_instance_id)" >> "$GITHUB_OUTPUT"
           echo "queue_claims_id=$(terraform output -raw queue_claims_id)" >> "$GITHUB_OUTPUT"
