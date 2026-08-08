@@ -114,3 +114,30 @@ resource "aws_connect_lambda_function_association" "eligibility_check" {
   instance_id  = module.connect.connect_instance_id
   function_arn = module.lambda.lambda_eligibility_check_alias_arn
 }
+
+# The other 5 Lambdas (Phase 1/2) were never associated with the Connect
+# instance -- InvokeLambdaFunction/InvokeFlowModule actions calling them
+# fail immediately with no CloudWatch invocation recorded at all, since
+# Connect never had permission to invoke them in the first place. Confirmed
+# live: module-customer-lookup's InvokeCustomerLookup action fell through to
+# its NoMatchingError transition on every real call, despite the Lambda
+# working correctly via direct aws lambda invoke.
+resource "aws_connect_lambda_function_association" "customer_lookup" {
+  instance_id  = module.connect.connect_instance_id
+  function_arn = module.lambda_customer_lookup.alias_arn
+}
+
+resource "aws_connect_lambda_function_association" "routing_decision" {
+  instance_id  = module.connect.connect_instance_id
+  function_arn = module.lambda_routing_decision.alias_arn
+}
+
+resource "aws_connect_lambda_function_association" "sms_verification" {
+  instance_id  = module.connect.connect_instance_id
+  function_arn = module.lambda_sms_verification.alias_arn
+}
+
+resource "aws_connect_lambda_function_association" "contact_event_publisher" {
+  instance_id  = module.connect.connect_instance_id
+  function_arn = module.lambda_contact_event_publisher.alias_arn
+}
