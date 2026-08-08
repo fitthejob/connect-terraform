@@ -242,6 +242,19 @@ locals {
       slot_type_id = aws_lexv2models_slot.verification_code.slot_type_id
       name         = aws_lexv2models_slot.verification_code.name
     }
+    # slot_priority isn't a Terraform-managed attribute at all -- it's set
+    # entirely by data.external.slot_priority's imperative UpdateIntent
+    # call (see that resource's comment for why -- a genuine, unresolved
+    # cycle between aws_lexv2models_intent and aws_lexv2models_slot). Left
+    # out of this hash, a version 2 that predated both the build fix and
+    # the priority fix would never get superseded: nothing Terraform
+    # tracks would differ from what produced that broken version, so no
+    # new version would ever be triggered even though the real DRAFT state
+    # had moved on. Feeding the script's own reported result back into the
+    # hash closes that gap -- confirmed live as the actual cause of a
+    # stuck botVersion "2" that never advanced to "3" despite DRAFT being
+    # correctly built and prioritized by that point.
+    verification_code_slot_priority = data.external.slot_priority.result
   }))
 }
 
