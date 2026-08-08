@@ -256,6 +256,17 @@ resource "aws_lexv2models_bot_version" "v1" {
   }
 
   lifecycle {
+    # create_before_destroy is required, not just nice-to-have: Lex refuses
+    # to delete a bot version while any alias still points at it
+    # (ConflictException: "Bot version N is being used by existing bot
+    # alias", confirmed live on the default destroy-then-create order). The
+    # alias only moves off the old version via data.external.bot_alias's
+    # update-bot-alias call, which itself depends on the new version already
+    # existing -- so the new version must be created first, then the alias
+    # script (which re-runs on every apply) moves the alias forward, only
+    # then can the old version actually be destroyed.
+    create_before_destroy = true
+
     replace_triggered_by = [
       aws_lexv2models_intent.fallback,
       aws_lexv2models_intent.claims,
