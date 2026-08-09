@@ -124,8 +124,10 @@ summarized here:
   verification code (exact string match, leading zeros preserved) but its
   ASR grammar is tuned for spelled-out confirmation codes, not digit-by-
   digit spoken input — confirmed live, spoken codes consistently failed to
-  match despite DTMF entry of the same code working. `AMAZON.NumberSequence`
-  is the correct choice for spoken PIN-style input.
+  match despite DTMF entry of the same code working. `AMAZON.PhoneNumber`
+  is the correct choice for spoken PIN-style input: it converts to a
+  numeric string (not an integer, so leading zeros survive) and its ASR
+  grammar is built for digit-by-digit spoken sequences.
 - **A pure-DTMF `GetParticipantInput` action needs an explicit
   `InputTimeLimitExceeded` error transition**, not just
   `NoMatchingCondition` — Connect rejects flow/module content missing it,
