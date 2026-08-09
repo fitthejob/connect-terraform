@@ -121,6 +121,17 @@ const menuInput = new ConnectParticipantWithLexBotActionBuilder("MenuInput")
       "For authorizations, press or say 3. For billing, press or say 4.",
   )
   .lexV2BotAliasArn(LEX_BOT_ALIAS_ARN)
+  // Confirmed live: menu DTMF entry (pressing 1-4) wasn't reliably
+  // recognized -- this action previously set no LexSessionAttributes at
+  // all, unlike module-sms-verification's CollectCode action, which
+  // explicitly enables both audio and DTMF input. ClaimsIntent/
+  // BenefitsIntent/AuthorizationsIntent/BillingIntent have no slots to
+  // scope to (unlike VerificationCodeIntent:VerificationCode), so the
+  // wildcard intent:slot form (*:*) is used, which AWS documents as
+  // applying the setting bot-wide/default when no specific intent/slot is
+  // named.
+  .sessionAttribute("x-amz-lex:allow-audio-input:*:*", "true")
+  .sessionAttribute("x-amz-lex:allow-dtmf-input:*:*", "true")
   .whenIntentEquals("ClaimsIntent", "SetIntentClaims")
   .whenIntentEquals("BenefitsIntent", "SetIntentBenefits")
   .whenIntentEquals("AuthorizationsIntent", "SetIntentAuthorizations")
