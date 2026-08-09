@@ -119,6 +119,18 @@ resource "aws_connect_contact_flow" "validation_sandbox" {
   content     = file("${path.module}/contact_flows/validation_sandbox.json")
 }
 
+# Phase 4: shared agent whisper flow, branches on contact attributes set
+# earlier in Main-Inbound (Queue, CustomerStatus, CustomerTier,
+# VerificationStatus) rather than one whisper flow per queue -- see
+# scripts/agent-whisper-flow.ts for the branching logic.
+resource "aws_connect_contact_flow" "agent_whisper" {
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Agent-Whisper-${var.environment}"
+  description = "Shared agent whisper flow, branches on queue/customer/verification attributes"
+  type        = "AGENT_WHISPER"
+  content     = file("${path.module}/contact_flows/agent_whisper.json")
+}
+
 # Module counterpart to validation_sandbox above -- CI pushes generated
 # module JSON (e.g. callback_offer.json) here via UpdateContactFlowModuleContent
 # before trusting it enough to apply to the real module resource.
