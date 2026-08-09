@@ -161,170 +161,177 @@
         },
         "isFriendlyName": true
       },
-      "CheckQueueForTransfer": {
+      "AnnounceResolvedQueue": {
         "position": {
           "x": 2620,
           "y": 820
         },
         "isFriendlyName": true
       },
-      "SetQueueClaims": {
+      "CheckQueueForTransfer": {
         "position": {
           "x": 2880,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueClaims": {
+        "position": {
+          "x": 3140,
           "y": 20
         },
         "isFriendlyName": true
       },
       "SetQueueBenefits": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 220
         },
         "isFriendlyName": true
       },
       "SetQueueAuthorizations": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 420
         },
         "isFriendlyName": true
       },
       "SetQueueBilling": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 620
         },
         "isFriendlyName": true
       },
       "SetQueueGeneral": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaimsSetWhisper": {
         "position": {
-          "x": 3140,
+          "x": 3400,
           "y": 20
         },
         "isFriendlyName": true
       },
       "TransferBenefitsSetWhisper": {
         "position": {
-          "x": 3140,
+          "x": 3400,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferAuthorizationsSetWhisper": {
         "position": {
-          "x": 3140,
+          "x": 3400,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferBillingSetWhisper": {
         "position": {
-          "x": 3140,
+          "x": 3400,
           "y": 620
         },
         "isFriendlyName": true
       },
       "TransferGeneralSetWhisper": {
         "position": {
-          "x": 3140,
+          "x": 3400,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaims": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 20
         },
         "isFriendlyName": true
       },
       "TransferBenefits": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferAuthorizations": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferBilling": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 620
         },
         "isFriendlyName": true
       },
       "TransferGeneral": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaimsSetCallbackQueue": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 20
         },
         "isFriendlyName": true
       },
       "Disconnect": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferBenefitsSetCallbackQueue": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferAuthorizationsSetCallbackQueue": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 620
         },
         "isFriendlyName": true
       },
       "TransferBillingSetCallbackQueue": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferGeneralSetCallbackQueue": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 1020
         },
         "isFriendlyName": true
       },
       "InvokeCallbackOffer": {
         "position": {
-          "x": 3920,
+          "x": 4180,
           "y": 20
         },
         "isFriendlyName": true
       },
       "PublishDisconnected": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 20
         },
         "isFriendlyName": true
@@ -837,6 +844,22 @@
           "Queue": "$.Attributes.Queue",
           "Intent": "$.Attributes.Intent"
         }
+      },
+      "Transitions": {
+        "NextAction": "AnnounceResolvedQueue",
+        "Errors": [
+          {
+            "NextAction": "AnnounceResolvedQueue",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "AnnounceResolvedQueue",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Transferring to $.Attributes.Queue."
       },
       "Transitions": {
         "NextAction": "CheckQueueForTransfer",

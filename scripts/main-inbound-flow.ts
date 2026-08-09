@@ -260,9 +260,25 @@ const setQueueNameGeneral = setQueueName("SetQueueNameGeneral", "General");
 const publishTransferred = publishEvent(
   "PublishTransferred",
   "contact.transferred",
-  "CheckQueueForTransfer",
+  "AnnounceResolvedQueue",
   { Queue: "$.Attributes.Queue", Intent: "$.Attributes.Intent" },
 );
+
+// TEMPORARY test-diagnostic checkpoint for Phase 4 manual testing (see
+// docs/superpowers/plans/2026-08-09-phase4-test-guide.md) -- states the
+// REAL resolved destination queue right before transfer, which is the
+// single highest-value confirmation point: it directly surfaces the
+// suspended-account override (Test 4.1/4.2 in the guide expect this to say
+// "General" even when the caller selected Claims/Benefits). Remove once the
+// full test guide passes and Phase 4 is confirmed working end-to-end --
+// this should never ship as permanent caller-facing content.
+const announceResolvedQueue = new MessageParticipantActionBuilder(
+  "AnnounceResolvedQueue",
+)
+  .text("Transferring to $.Attributes.Queue.")
+  .next("CheckQueueForTransfer")
+  .onError("CheckQueueForTransfer")
+  .build();
 
 // --- Queue transfer, whisper flow, and callback-offer-on-capacity, per
 // queue. Same queueTransferPair shape as the prior flow, plus SetWhisperFlow
@@ -378,6 +394,7 @@ const flow = new FlowBuilder("MainInbound")
   .add(setQueueNameBilling)
   .add(setQueueNameGeneral)
   .add(publishTransferred)
+  .add(announceResolvedQueue)
   .add(checkQueueForTransfer)
   .add(setQueueClaims)
   .add(setWhisperClaims)
