@@ -1,6 +1,6 @@
 import {
   CompareActionBuilder,
-  DisconnectParticipantActionBuilder,
+  EndFlowExecutionActionBuilder,
   FlowBuilder,
   MessageParticipantActionBuilder,
   equalsCondition,
@@ -17,7 +17,17 @@ import { dirname, resolve } from "node:path";
 // module-customer-lookup / module-sms-verification flow modules
 // (CustomerStatus, CustomerTier, VerificationStatus).
 
-const disconnect = new DisconnectParticipantActionBuilder("Disconnect").build();
+// AGENT_WHISPER flows terminate with EndFlowExecution, not
+// DisconnectParticipant -- confirmed against this account's real, working
+// "Default agent whisper" flow (describe-contact-flow shows its terminal
+// action as Type: EndFlowExecution). DisconnectParticipant is valid for a
+// regular CONTACT_FLOW but wrong here: a whisper is a short audio segment
+// played to the agent, not something that owns the contact's lifecycle.
+// This mismatch is exactly why Validation-Sandbox-dev's own successful
+// content push (a CONTACT_FLOW-typed sandbox) didn't catch it -- content
+// validation is type-aware, and the sandbox's type doesn't match
+// AGENT_WHISPER's constraints.
+const endFlow = new EndFlowExecutionActionBuilder("EndFlow").build();
 
 function whisperMessage(id: string, text: string, next: string) {
   return new MessageParticipantActionBuilder(id)
@@ -77,15 +87,15 @@ const checkCustomerStatus = new CompareActionBuilder("CheckCustomerStatus")
   .onError("SayUnknownCustomer")
   .build();
 
-const sayClaims = whisperMessage("SayClaims", "Claims call.", "Disconnect");
-const sayBenefits = whisperMessage("SayBenefits", "Benefits call.", "Disconnect");
+const sayClaims = whisperMessage("SayClaims", "Claims call.", "EndFlow");
+const sayBenefits = whisperMessage("SayBenefits", "Benefits call.", "EndFlow");
 const sayAuthorizations = whisperMessage(
   "SayAuthorizations",
   "Authorizations call.",
-  "Disconnect",
+  "EndFlow",
 );
-const sayBilling = whisperMessage("SayBilling", "Billing call.", "Disconnect");
-const sayGeneral = whisperMessage("SayGeneral", "General inquiry.", "Disconnect");
+const sayBilling = whisperMessage("SayBilling", "Billing call.", "EndFlow");
+const sayGeneral = whisperMessage("SayGeneral", "General inquiry.", "EndFlow");
 
 const checkQueue = new CompareActionBuilder("CheckQueue")
   .comparisonValue("$.Attributes.Queue")
@@ -111,7 +121,7 @@ const flow = new FlowBuilder("AgentWhisper")
   .add(sayAuthorizations)
   .add(sayBilling)
   .add(sayGeneral)
-  .add(disconnect)
+  .add(endFlow)
   .build();
 
 const outputPath = process.env.FLOW_OUTPUT_PATH
