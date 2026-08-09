@@ -68,6 +68,16 @@ output "agent_whisper_flow_id" {
   value       = aws_connect_contact_flow.agent_whisper.contact_flow_id
 }
 
+# UpdateContactEventHooks (SetAgentWhisperFlowActionBuilder) requires the
+# flow's ARN, not its bare ID -- confirmed live, InvalidContactFlowException
+# ("invalid resource") on the bare ID despite it being a real, valid flow.
+# InvokeFlowModuleActionBuilder/UpdateContactTargetQueueActionBuilder take
+# bare IDs; this action does not.
+output "agent_whisper_flow_arn" {
+  description = "Contact flow ARN of the shared Agent Whisper flow (required by UpdateContactEventHooks)"
+  value       = aws_connect_contact_flow.agent_whisper.arn
+}
+
 output "validation_sandbox_module_id" {
   description = "Contact flow module ID of the CI validation sandbox module"
   value       = aws_connect_contact_flow_module.validation_sandbox_module.contact_flow_module_id
