@@ -206,7 +206,7 @@
       "Identifier": "RetryLoop",
       "Type": "Loop",
       "Parameters": {
-        "LoopCount": 2
+        "LoopCount": 10
       },
       "Transitions": {
         "NextAction": "CollectCode",

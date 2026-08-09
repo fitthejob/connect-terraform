@@ -91,8 +91,22 @@ const collectCode = new ConnectParticipantWithLexBotActionBuilder(
   .onNoMatchingCondition("RetryPrompt")
   .build();
 
+// RetryLoop and sms-verification's MAX_ATTEMPTS (3, in DynamoDB) are two
+// independent counters -- RetryLoop fires on EVERY trip back to CollectCode,
+// including a malformed/no-match/timeout turn that never reached VerifyCode
+// at all (no code was submitted, so the Lambda's own attempts counter in
+// DynamoDB was never touched), while MAX_ATTEMPTS only increments on an
+// actual submitted-and-wrong code. Confirmed live: a loopCount of 2 let a
+// single garbled/no-match turn silently consume one of the caller's two
+// real tries, so MaxAttemptsExceeded fired after only 2 genuine wrong-code
+// attempts instead of the intended 3 -- the caller never got the number of
+// tries the Lambda's own logic promised them. Set generously high (10) so
+// this loop is purely a backstop against a caller who never produces valid
+// input at all; the Lambda's MAX_ATTEMPTS_EXCEEDED (via
+// CheckVerificationResult) is the real, authoritative limit on wrong-code
+// attempts.
 const retryLoop = new LoopActionBuilder("RetryLoop")
-  .loopCount(2)
+  .loopCount(10)
   .whenContinueLooping("CollectCode")
   .whenDoneLooping("MaxAttemptsExceeded")
   .build();
