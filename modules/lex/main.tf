@@ -169,7 +169,7 @@ resource "aws_lexv2models_intent" "verification_code" {
   }
 }
 
-# AMAZON.NumberSequence (not AMAZON.Number, not AMAZON.AlphaNumeric):
+# AMAZON.PhoneNumber (not AMAZON.Number, not AMAZON.AlphaNumeric):
 # AMAZON.Number would parse "007123" as the integer 7123, breaking
 # exact-match verification against the code stored by sms-verification's
 # DynamoDB record. AMAZON.AlphaNumeric preserves the string but its ASR
@@ -177,9 +177,13 @@ resource "aws_lexv2models_intent" "verification_code" {
 # + digits dictated individually), not purely-spoken digit sequences --
 # confirmed live, spoken digit-by-digit input consistently failed to match
 # ("Sorry, we didn't catch that") despite DTMF entry of the identical code
-# working correctly. AMAZON.NumberSequence is purpose-built for spoken
-# multi-digit sequences (PINs/confirmation codes) and preserves leading
-# zeros as a string.
+# working correctly. AMAZON.PhoneNumber converts spoken input into a numeric
+# string (not an integer), preserving leading zeros, and its ASR grammar is
+# built for digit-by-digit spoken sequences -- the same acoustic pattern as
+# a 6-digit verification code. Confirmed against
+# ListBuiltInSlotTypes (locale en_US) as one of Lex V2's actual built-in
+# slot types; not every AWS-documented-sounding slot type name is real, so
+# verify against that API before choosing one.
 resource "aws_lexv2models_slot" "verification_code" {
   bot_id      = aws_lexv2models_bot.bot.id
   bot_version = "DRAFT"
@@ -187,7 +191,7 @@ resource "aws_lexv2models_slot" "verification_code" {
   locale_id   = aws_lexv2models_bot_locale.en_us.locale_id
   name        = "VerificationCode"
 
-  slot_type_id = "AMAZON.NumberSequence"
+  slot_type_id = "AMAZON.PhoneNumber"
 
   value_elicitation_setting {
     slot_constraint = "Required"

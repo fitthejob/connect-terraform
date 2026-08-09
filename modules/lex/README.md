@@ -120,10 +120,17 @@ confirmation codes (letters + digits dictated individually), not purely-
 spoken digit sequences — confirmed live, digit-by-digit spoken input into an
 `AMAZON.AlphaNumeric` slot consistently failed to match ("Sorry, we didn't
 catch that") despite DTMF entry of the identical code working correctly via
-the same `ConnectParticipantWithLexBot` action. `AMAZON.NumberSequence` is
-purpose-built for spoken PIN/code sequences and, unlike `AMAZON.Number`,
-preserves leading zeros as a string rather than parsing them away as an
-integer. See `verification_code` slot in `main.tf`.
+the same `ConnectParticipantWithLexBot` action. `AMAZON.PhoneNumber`, unlike
+`AMAZON.Number`, converts spoken input into a numeric string rather than
+parsing it into an integer (so leading zeros survive), and its ASR grammar
+is built for digit-by-digit spoken sequences. See `verification_code` slot
+in `main.tf`.
+
+Not every plausible-sounding `AMAZON.*` name is real — check
+`aws lexv2-models list-built-in-slot-types --locale-id en_US` for the
+actual, current set of built-in slot types before picking one; the API is
+the source of truth, not intuition about what a slot type "should" be
+called.
 
 ## If HashiCorp ever adds real support
 
