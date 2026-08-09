@@ -77,31 +77,45 @@
         },
         "isFriendlyName": true
       },
-      "SetExpiredAttributes": {
+      "SetRemainingAttempts": {
         "position": {
           "x": 1320,
           "y": 220
         },
         "isFriendlyName": true
       },
-      "MaxAttemptsExceeded": {
+      "SetExpiredAttributes": {
         "position": {
           "x": 1320,
           "y": 420
         },
         "isFriendlyName": true
       },
-      "SetFailedAttributes": {
+      "MaxAttemptsExceeded": {
         "position": {
           "x": 1320,
           "y": 620
         },
         "isFriendlyName": true
       },
-      "SetMaxAttemptsAttributes": {
+      "SetFailedAttributes": {
+        "position": {
+          "x": 1320,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
+      "IncorrectCodePrompt": {
         "position": {
           "x": 1580,
           "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetMaxAttemptsAttributes": {
+        "position": {
+          "x": 1580,
+          "y": 220
         },
         "isFriendlyName": true
       }
@@ -235,6 +249,41 @@
       }
     },
     {
+      "Identifier": "SetRemainingAttempts",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "RemainingAttempts": "$.External.remainingAttempts"
+        }
+      },
+      "Transitions": {
+        "NextAction": "IncorrectCodePrompt",
+        "Errors": [
+          {
+            "NextAction": "IncorrectCodePrompt",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "IncorrectCodePrompt",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "That code wasn't correct. You have $.Attributes.RemainingAttempts attempts remaining."
+      },
+      "Transitions": {
+        "NextAction": "RetryLoop",
+        "Errors": [
+          {
+            "NextAction": "RetryLoop",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
       "Identifier": "VerifyCode",
       "Type": "InvokeLambdaFunction",
       "Parameters": {
@@ -274,7 +323,7 @@
             }
           },
           {
-            "NextAction": "RetryPrompt",
+            "NextAction": "SetRemainingAttempts",
             "Condition": {
               "Operator": "Equals",
               "Operands": [

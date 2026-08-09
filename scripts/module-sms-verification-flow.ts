@@ -103,6 +103,42 @@ const retryPrompt = new MessageParticipantActionBuilder("RetryPrompt")
   .onError("RetryLoop")
   .build();
 
+// Distinct from RetryPrompt: a genuinely wrong code (Lex understood the
+// caller fine, sms-verification's Lambda just didn't match it) is a
+// different situation from "we didn't catch that" (no-match/timeout on
+// collection itself) and deserves its own message -- confirmed live, both
+// branches previously routed through RetryPrompt's generic text, leaving no
+// way for the caller to tell "you weren't understood" apart from "you were
+// understood, but that code was wrong."
+//
+// $.External.* only exists in scope immediately after the Lambda invoke
+// that produced it (used that way by CheckVerificationResult, right after
+// VerifyCode) -- this repo has no precedent for referencing it from a later
+// action, and module-test-wrapper-flow.ts's working pattern for
+// interpolating a value into spoken text goes through a contact attribute
+// ($.Attributes.*) instead. SetRemainingAttempts captures
+// $.External.remainingAttempts into an attribute right after VerifyCode so
+// IncorrectCodePrompt can read it the same, already-proven way.
+const setRemainingAttempts = new UpdateContactAttributesActionBuilder(
+  "SetRemainingAttempts",
+)
+  .targetCurrent()
+  .attribute("RemainingAttempts", "$.External.remainingAttempts")
+  .next("IncorrectCodePrompt")
+  .onError("IncorrectCodePrompt")
+  .build();
+
+const incorrectCodePrompt = new MessageParticipantActionBuilder(
+  "IncorrectCodePrompt",
+)
+  .text(
+    "That code wasn't correct. You have $.Attributes.RemainingAttempts " +
+      "attempts remaining.",
+  )
+  .next("RetryLoop")
+  .onError("RetryLoop")
+  .build();
+
 const verifyCode = new InvokeLambdaFunctionActionBuilder("VerifyCode")
   .lambdaArn(SMS_VERIFICATION_LAMBDA_ARN)
   .timeLimitSeconds(8)
@@ -178,7 +214,7 @@ const checkVerificationResult = new CompareActionBuilder(
 )
   .comparisonValue("$.External.verificationResult")
   .when(equalsCondition("VERIFIED"), "SetVerified")
-  .when(equalsCondition("FAILED"), "RetryPrompt")
+  .when(equalsCondition("FAILED"), "SetRemainingAttempts")
   .when(equalsCondition("EXPIRED"), "SetExpiredAttributes")
   .when(equalsCondition("MAX_ATTEMPTS_EXCEEDED"), "MaxAttemptsExceeded")
   .onError("VerificationFailed")
@@ -190,6 +226,8 @@ const flow = new FlowBuilder("SmsVerification")
   .add(collectCode)
   .add(retryLoop)
   .add(retryPrompt)
+  .add(setRemainingAttempts)
+  .add(incorrectCodePrompt)
   .add(verifyCode)
   .add(checkVerificationResult)
   .add(setVerified)
