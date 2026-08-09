@@ -1,13 +1,17 @@
 import {
+  CompareActionBuilder,
   ConnectParticipantWithLexBotActionBuilder,
   DisconnectParticipantActionBuilder,
   FlowBuilder,
   InvokeFlowModuleActionBuilder,
+  InvokeLambdaFunctionActionBuilder,
   LoopActionBuilder,
   MessageParticipantActionBuilder,
+  SetWhisperFlowActionBuilder,
   TransferContactToQueueActionBuilder,
   UpdateContactAttributesActionBuilder,
   UpdateContactTargetQueueActionBuilder,
+  equalsCondition,
 } from "@fitthejob/connect-flow-builder";
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -22,7 +26,19 @@ const QUEUE_BENEFITS_ID = requireEnv("QUEUE_BENEFITS_ID");
 const QUEUE_AUTHORIZATIONS_ID = requireEnv("QUEUE_AUTHORIZATIONS_ID");
 const QUEUE_BILLING_ID = requireEnv("QUEUE_BILLING_ID");
 const QUEUE_GENERAL_ID = requireEnv("QUEUE_GENERAL_ID");
+const QUEUE_CLAIMS_ARN = requireEnv("QUEUE_CLAIMS_ARN");
+const QUEUE_BENEFITS_ARN = requireEnv("QUEUE_BENEFITS_ARN");
+const QUEUE_AUTHORIZATIONS_ARN = requireEnv("QUEUE_AUTHORIZATIONS_ARN");
+const QUEUE_BILLING_ARN = requireEnv("QUEUE_BILLING_ARN");
+const QUEUE_GENERAL_ARN = requireEnv("QUEUE_GENERAL_ARN");
 const CALLBACK_OFFER_MODULE_ID = requireEnv("CALLBACK_OFFER_MODULE_ID");
+const CUSTOMER_LOOKUP_MODULE_ID = requireEnv("CUSTOMER_LOOKUP_MODULE_ID");
+const SMS_VERIFICATION_MODULE_ID = requireEnv("SMS_VERIFICATION_MODULE_ID");
+const ROUTING_DECISION_LAMBDA_ARN = requireEnv("ROUTING_DECISION_LAMBDA_ARN");
+const CONTACT_EVENT_PUBLISHER_LAMBDA_ARN = requireEnv(
+  "CONTACT_EVENT_PUBLISHER_LAMBDA_ARN",
+);
+const AGENT_WHISPER_FLOW_ID = requireEnv("AGENT_WHISPER_FLOW_ID");
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -32,6 +48,56 @@ function requireEnv(name: string): string {
   return value;
 }
 
+// --- Event publishing (spec: initiation, post-verification, transfer,
+// disconnect) -- all 4 invoke the same contact-event-publisher Lambda with a
+// different EventType, mirroring module-sms-verification's SendCode/VerifyCode
+// two-invokes-one-Lambda pattern.
+
+function publishEvent(
+  id: string,
+  eventType: string,
+  next: string,
+  extraParams?: Record<string, string>,
+) {
+  let builder = new InvokeLambdaFunctionActionBuilder(id)
+    .lambdaArn(CONTACT_EVENT_PUBLISHER_LAMBDA_ARN)
+    .timeLimitSeconds(8)
+    .invocationAttribute("EventType", eventType);
+  for (const [key, value] of Object.entries(extraParams ?? {})) {
+    builder = builder.invocationAttribute(key, value);
+  }
+  // A failed event publish must never block the call itself -- same
+  // fire-and-forget tolerance as customer-lookup's own event publish
+  // (modules/lambda/src/customer-lookup/index.ts's publishLookupCompleted
+  // catch block).
+  return builder.next(next).onError(next).build();
+}
+
+const publishInitiated = publishEvent(
+  "PublishInitiated",
+  "contact.initiated",
+  "InvokeCustomerLookup",
+);
+
+const publishPostVerification = publishEvent(
+  "PublishPostVerification",
+  "verification.completed",
+  "InvokeRoutingDecision",
+  { VerificationStatus: "$.Attributes.VerificationStatus" },
+);
+
+// --- Customer lookup (always runs, every call) ---
+
+const invokeCustomerLookup = new InvokeFlowModuleActionBuilder(
+  "InvokeCustomerLookup",
+)
+  .flowModuleId(CUSTOMER_LOOKUP_MODULE_ID)
+  .next("Greeting")
+  .onError("Greeting")
+  .build();
+
+// --- Menu capture (Lex + DTMF fallback, unchanged from the prior flow) ---
+
 const greeting = new MessageParticipantActionBuilder("Greeting")
   .text(
     "Thanks for calling. For claims, press or say 1. For benefits, press or say 2. " +
@@ -40,13 +106,10 @@ const greeting = new MessageParticipantActionBuilder("Greeting")
   .next("RetryLoop")
   .build();
 
-// Native Connect Loop block: tracks the retry count for us. Two iterations
-// means the caller gets two reprompts (three total attempts) before we give
-// up and route to the general queue.
 const retryLoop = new LoopActionBuilder("RetryLoop")
   .loopCount(2)
   .whenContinueLooping("MenuInput")
-  .whenDoneLooping("SetQueueGeneral")
+  .whenDoneLooping("SetIntentGeneral")
   .build();
 
 const menuInput = new ConnectParticipantWithLexBotActionBuilder("MenuInput")
@@ -55,10 +118,10 @@ const menuInput = new ConnectParticipantWithLexBotActionBuilder("MenuInput")
       "For authorizations, press or say 3. For billing, press or say 4.",
   )
   .lexV2BotAliasArn(LEX_BOT_ALIAS_ARN)
-  .whenIntentEquals("ClaimsIntent", "SetQueueClaims")
-  .whenIntentEquals("BenefitsIntent", "SetQueueBenefits")
-  .whenIntentEquals("AuthorizationsIntent", "SetQueueAuthorizations")
-  .whenIntentEquals("BillingIntent", "SetQueueBilling")
+  .whenIntentEquals("ClaimsIntent", "SetIntentClaims")
+  .whenIntentEquals("BenefitsIntent", "SetIntentBenefits")
+  .whenIntentEquals("AuthorizationsIntent", "SetIntentAuthorizations")
+  .whenIntentEquals("BillingIntent", "SetIntentBilling")
   .onNoMatchingCondition("RetryPrompt")
   .onInputTimeLimitExceeded("RetryPrompt")
   .build();
@@ -67,6 +130,140 @@ const retryPrompt = new MessageParticipantActionBuilder("RetryPrompt")
   .text("We're sorry, we did not hear your choice.")
   .next("RetryLoop")
   .build();
+
+// --- Set Intent per branch (this is the caller's raw menu selection, NOT
+// yet the actual destination queue -- routing-decision below can override
+// it, e.g. on a suspended account), then gate on whether the SELECTED
+// intent's queue requires SMS verification (spec: Claims/Benefits/
+// Authorizations/Billing are sensitive; General is not). Verification runs
+// on intent, before routing-decision, matching the spec's own sequence
+// ("Calls module-sms-verification for any account-sensitive routing path"
+// precedes "Calls routing-decision Lambda with customer attributes and
+// resolved intent"). ---
+
+function setIntent(id: string, intent: string, next: string) {
+  return new UpdateContactAttributesActionBuilder(id)
+    .targetCurrent()
+    .attribute("Intent", intent)
+    .next(next)
+    .onError(next)
+    .build();
+}
+
+const setIntentClaims = setIntent(
+  "SetIntentClaims",
+  "ClaimsIntent",
+  "InvokeSmsVerification",
+);
+const setIntentBenefits = setIntent(
+  "SetIntentBenefits",
+  "BenefitsIntent",
+  "InvokeSmsVerification",
+);
+const setIntentAuthorizations = setIntent(
+  "SetIntentAuthorizations",
+  "AuthorizationsIntent",
+  "InvokeSmsVerification",
+);
+const setIntentBilling = setIntent(
+  "SetIntentBilling",
+  "BillingIntent",
+  "InvokeSmsVerification",
+);
+// General is not a sensitive queue -- skips SMS verification entirely,
+// going straight to the routing-decision/event-publish/transfer sequence.
+const setIntentGeneral = setIntent(
+  "SetIntentGeneral",
+  "FallbackIntent",
+  "PublishPostVerification",
+);
+
+const invokeSmsVerification = new InvokeFlowModuleActionBuilder(
+  "InvokeSmsVerification",
+)
+  .flowModuleId(SMS_VERIFICATION_MODULE_ID)
+  .next("PublishPostVerification")
+  .onError("PublishPostVerification")
+  .build();
+
+// --- Routing decision (spec: "Calls routing-decision Lambda with customer
+// attributes and resolved intent"). This Lambda is the real routing
+// authority -- its queueArn output is resolved to a queue ID below and IS
+// the actual transfer target, not the caller's raw intent selection. This
+// is what makes the Lambda's SUSPENDED-account override
+// (modules/lambda/src/routing-decision/index.ts:65-72, forces general +
+// HIGH priority regardless of intent) actually take effect end-to-end. ---
+
+const invokeRoutingDecision = new InvokeLambdaFunctionActionBuilder(
+  "InvokeRoutingDecision",
+)
+  .lambdaArn(ROUTING_DECISION_LAMBDA_ARN)
+  .timeLimitSeconds(8)
+  .invocationAttribute("Intent", "$.Attributes.Intent")
+  .invocationAttribute("CustomerStatus", "$.Attributes.CustomerStatus")
+  .invocationAttribute("VerificationStatus", "$.Attributes.VerificationStatus")
+  .next("SetRoutingPriority")
+  // A failed routing-decision invoke must still land the caller somewhere
+  // -- default to General via the same attribute-setting path a resolved
+  // "general" queueArn would take, rather than dead-ending the call.
+  .onError("SetQueueNameGeneral")
+  .build();
+
+const setRoutingPriority = new UpdateContactAttributesActionBuilder(
+  "SetRoutingPriority",
+)
+  .targetCurrent()
+  .attribute("RoutingPriority", "$.External.routingPriority")
+  .next("ResolveQueueArn")
+  .onError("ResolveQueueArn")
+  .build();
+
+// --- Resolve routing-decision's queueArn output to this flow's queue-name
+// vocabulary (Claims/Benefits/Authorizations/Billing/General), which both
+// sets $.Attributes.Queue for the whisper flow and determines which
+// queueTransferPair branch actually runs. UpdateContactTargetQueueActionBuilder
+// needs a queue ID, not ARN -- CheckQueueForTransfer below still resolves
+// name -> ID via the existing per-branch queueTransferPair structure, this
+// step only resolves ARN -> name. ---
+
+const resolveQueueArn = new CompareActionBuilder("ResolveQueueArn")
+  .comparisonValue("$.External.queueArn")
+  .when(equalsCondition(QUEUE_CLAIMS_ARN), "SetQueueNameClaims")
+  .when(equalsCondition(QUEUE_BENEFITS_ARN), "SetQueueNameBenefits")
+  .when(equalsCondition(QUEUE_AUTHORIZATIONS_ARN), "SetQueueNameAuthorizations")
+  .when(equalsCondition(QUEUE_BILLING_ARN), "SetQueueNameBilling")
+  .when(equalsCondition(QUEUE_GENERAL_ARN), "SetQueueNameGeneral")
+  .onError("SetQueueNameGeneral")
+  .build();
+
+function setQueueName(id: string, queueName: string) {
+  return new UpdateContactAttributesActionBuilder(id)
+    .targetCurrent()
+    .attribute("Queue", queueName)
+    .next("PublishTransferred")
+    .onError("PublishTransferred")
+    .build();
+}
+
+const setQueueNameClaims = setQueueName("SetQueueNameClaims", "Claims");
+const setQueueNameBenefits = setQueueName("SetQueueNameBenefits", "Benefits");
+const setQueueNameAuthorizations = setQueueName(
+  "SetQueueNameAuthorizations",
+  "Authorizations",
+);
+const setQueueNameBilling = setQueueName("SetQueueNameBilling", "Billing");
+const setQueueNameGeneral = setQueueName("SetQueueNameGeneral", "General");
+
+const publishTransferred = publishEvent(
+  "PublishTransferred",
+  "contact.transferred",
+  "CheckQueueForTransfer",
+  { Queue: "$.Attributes.Queue", Intent: "$.Attributes.Intent" },
+);
+
+// --- Queue transfer, whisper flow, and callback-offer-on-capacity, per
+// queue. Same queueTransferPair shape as the prior flow, plus SetWhisperFlow
+// wired in ahead of the transfer itself. ---
 
 function queueTransferPair(
   setActionId: string,
@@ -84,7 +281,15 @@ function queueTransferPair(
 
   const setQueue = new UpdateContactTargetQueueActionBuilder(setActionId)
     .queueId(queueId)
+    .next(`${transferActionId}SetWhisper`)
+    .build();
+
+  const setWhisper = new SetWhisperFlowActionBuilder(
+    `${transferActionId}SetWhisper`,
+  )
+    .whisperFlowId(AGENT_WHISPER_FLOW_ID)
     .next(transferActionId)
+    .onError(transferActionId)
     .build();
 
   const transfer = new TransferContactToQueueActionBuilder(transferActionId)
@@ -92,15 +297,16 @@ function queueTransferPair(
     .onError("Disconnect", "NoMatchingError")
     .build();
 
-  return [setQueue, transfer, setCallbackQueueId];
+  return [setQueue, setWhisper, transfer, setCallbackQueueId];
 }
 
-const [setQueueClaims, transferClaims, setCallbackQueueClaims] =
+const [setQueueClaims, setWhisperClaims, transferClaims, setCallbackQueueClaims] =
   queueTransferPair("SetQueueClaims", "TransferClaims", QUEUE_CLAIMS_ID);
-const [setQueueBenefits, transferBenefits, setCallbackQueueBenefits] =
+const [setQueueBenefits, setWhisperBenefits, transferBenefits, setCallbackQueueBenefits] =
   queueTransferPair("SetQueueBenefits", "TransferBenefits", QUEUE_BENEFITS_ID);
 const [
   setQueueAuthorizations,
+  setWhisperAuthorizations,
   transferAuthorizations,
   setCallbackQueueAuthorizations,
 ] = queueTransferPair(
@@ -108,42 +314,90 @@ const [
   "TransferAuthorizations",
   QUEUE_AUTHORIZATIONS_ID,
 );
-const [setQueueBilling, transferBilling, setCallbackQueueBilling] =
+const [setQueueBilling, setWhisperBilling, transferBilling, setCallbackQueueBilling] =
   queueTransferPair("SetQueueBilling", "TransferBilling", QUEUE_BILLING_ID);
-const [setQueueGeneral, transferGeneral, setCallbackQueueGeneral] =
+const [setQueueGeneral, setWhisperGeneral, transferGeneral, setCallbackQueueGeneral] =
   queueTransferPair("SetQueueGeneral", "TransferGeneral", QUEUE_GENERAL_ID);
 
+const checkQueueForTransfer = new CompareActionBuilder("CheckQueueForTransfer")
+  .comparisonValue("$.Attributes.Queue")
+  .when(equalsCondition("Claims"), "SetQueueClaims")
+  .when(equalsCondition("Benefits"), "SetQueueBenefits")
+  .when(equalsCondition("Authorizations"), "SetQueueAuthorizations")
+  .when(equalsCondition("Billing"), "SetQueueBilling")
+  .when(equalsCondition("General"), "SetQueueGeneral")
+  .onError("SetQueueGeneral")
+  .build();
+
 const disconnect = new DisconnectParticipantActionBuilder("Disconnect").build();
+
+// contact.disconnected fires right before the flow's own terminal
+// Disconnect action -- DurationSeconds isn't available as a flow system
+// attribute this phase (would need a SetContactAttribute at call start
+// capturing a timestamp and computing elapsed time, out of scope here) so
+// it's omitted; contact-event-publisher/index.ts already treats it as
+// optional (only present when EventType is contact.disconnected AND
+// DurationSeconds is explicitly passed).
+const publishDisconnected = publishEvent(
+  "PublishDisconnected",
+  "contact.disconnected",
+  "Disconnect",
+);
 
 const invokeCallbackOffer = new InvokeFlowModuleActionBuilder(
   "InvokeCallbackOffer",
 )
   .flowModuleId(CALLBACK_OFFER_MODULE_ID)
-  .next("Disconnect")
-  .onError("Disconnect")
+  .next("PublishDisconnected")
+  .onError("PublishDisconnected")
   .build();
 
 const flow = new FlowBuilder("MainInbound")
-  .startWith(greeting)
+  .startWith(publishInitiated)
+  .add(invokeCustomerLookup)
+  .add(greeting)
   .add(retryLoop)
   .add(menuInput)
   .add(retryPrompt)
+  .add(setIntentClaims)
+  .add(setIntentBenefits)
+  .add(setIntentAuthorizations)
+  .add(setIntentBilling)
+  .add(setIntentGeneral)
+  .add(invokeSmsVerification)
+  .add(publishPostVerification)
+  .add(invokeRoutingDecision)
+  .add(setRoutingPriority)
+  .add(resolveQueueArn)
+  .add(setQueueNameClaims)
+  .add(setQueueNameBenefits)
+  .add(setQueueNameAuthorizations)
+  .add(setQueueNameBilling)
+  .add(setQueueNameGeneral)
+  .add(publishTransferred)
+  .add(checkQueueForTransfer)
   .add(setQueueClaims)
+  .add(setWhisperClaims)
   .add(transferClaims)
   .add(setCallbackQueueClaims)
   .add(setQueueBenefits)
+  .add(setWhisperBenefits)
   .add(transferBenefits)
   .add(setCallbackQueueBenefits)
   .add(setQueueAuthorizations)
+  .add(setWhisperAuthorizations)
   .add(transferAuthorizations)
   .add(setCallbackQueueAuthorizations)
   .add(setQueueBilling)
+  .add(setWhisperBilling)
   .add(transferBilling)
   .add(setCallbackQueueBilling)
   .add(setQueueGeneral)
+  .add(setWhisperGeneral)
   .add(transferGeneral)
   .add(setCallbackQueueGeneral)
   .add(invokeCallbackOffer)
+  .add(publishDisconnected)
   .add(disconnect)
   .build();
 
