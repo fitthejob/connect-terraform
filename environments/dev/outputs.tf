@@ -63,6 +63,11 @@ output "agent_whisper_flow_id" {
   value       = module.connect.agent_whisper_flow_id
 }
 
+output "agent_whisper_flow_arn" {
+  description = "Contact flow ARN of the shared Agent Whisper flow (required by UpdateContactEventHooks)"
+  value       = module.connect.agent_whisper_flow_arn
+}
+
 output "customer_lookup_lambda_arn" {
   description = "Alias ARN of the customer-lookup Lambda"
   value       = module.lambda_customer_lookup.alias_arn

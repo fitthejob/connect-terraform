@@ -932,7 +932,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1003,7 +1003,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1074,7 +1074,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1145,7 +1145,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1216,7 +1216,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {

@@ -38,7 +38,10 @@ const ROUTING_DECISION_LAMBDA_ARN = requireEnv("ROUTING_DECISION_LAMBDA_ARN");
 const CONTACT_EVENT_PUBLISHER_LAMBDA_ARN = requireEnv(
   "CONTACT_EVENT_PUBLISHER_LAMBDA_ARN",
 );
-const AGENT_WHISPER_FLOW_ID = requireEnv("AGENT_WHISPER_FLOW_ID");
+// UpdateContactEventHooks (SetAgentWhisperFlowActionBuilder) requires the
+// flow's ARN, not its bare ID -- confirmed live, InvalidContactFlowException
+// ("invalid resource") on the bare ID despite it being a real, valid flow.
+const AGENT_WHISPER_FLOW_ARN = requireEnv("AGENT_WHISPER_FLOW_ARN");
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -287,7 +290,7 @@ function queueTransferPair(
   const setWhisper = new SetAgentWhisperFlowActionBuilder(
     `${transferActionId}SetWhisper`,
   )
-    .whisperFlowId(AGENT_WHISPER_FLOW_ID)
+    .whisperFlowId(AGENT_WHISPER_FLOW_ARN)
     .next(transferActionId)
     .onError(transferActionId)
     .build();
