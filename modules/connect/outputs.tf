@@ -63,6 +63,11 @@ output "validation_sandbox_contact_flow_id" {
   value       = aws_connect_contact_flow.validation_sandbox.contact_flow_id
 }
 
+output "agent_whisper_flow_id" {
+  description = "Contact flow ID of the shared Agent Whisper flow"
+  value       = aws_connect_contact_flow.agent_whisper.contact_flow_id
+}
+
 output "validation_sandbox_module_id" {
   description = "Contact flow module ID of the CI validation sandbox module"
   value       = aws_connect_contact_flow_module.validation_sandbox_module.contact_flow_module_id

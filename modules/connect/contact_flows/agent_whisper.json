@@ -1,0 +1,12 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "Disconnect",
+  "Actions": [
+    {
+      "Identifier": "Disconnect",
+      "Type": "DisconnectParticipant",
+      "Parameters": {},
+      "Transitions": {}
+    }
+  ]
+}

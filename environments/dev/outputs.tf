@@ -57,3 +57,8 @@ output "lex_bot_alias_arn" {
   description = "ARN of the Lex bot alias associated with this instance"
   value       = module.lex.bot_alias_arn
 }
+
+output "agent_whisper_flow_id" {
+  description = "Contact flow ID of the shared Agent Whisper flow"
+  value       = module.connect.agent_whisper_flow_id
+}
