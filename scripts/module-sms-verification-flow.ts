@@ -86,9 +86,21 @@ const collectCode = new ConnectParticipantWithLexBotActionBuilder(
     "x-amz-lex:audio:start-timeout-ms:VerificationCodeIntent:VerificationCode",
     "45000",
   )
-  .whenIntentEquals("VerificationCodeIntent", "VerifyCode")
+  .whenIntentEquals("VerificationCodeIntent", "PleaseHold")
   .onInputTimeLimitExceeded("RetryPrompt")
   .onNoMatchingCondition("RetryPrompt")
+  .build();
+
+// VerifyCode's Lambda invoke can take up to its 8s timeLimitSeconds --
+// confirmed live as several seconds of dead air after the caller finishes
+// speaking/entering the code, with no indication the system is still doing
+// anything. A brief spoken message fills that gap; connect-flow-builder has
+// no audio-file/prompt-ARN support (MessageParticipantActionBuilder only
+// exposes .text()), so this is the supported mechanism for this repo today.
+const pleaseHold = new MessageParticipantActionBuilder("PleaseHold")
+  .text("One moment while we verify that code.")
+  .next("VerifyCode")
+  .onError("VerifyCode")
   .build();
 
 const retryLoop = new LoopActionBuilder("RetryLoop")
@@ -226,6 +238,7 @@ const flow = new FlowBuilder("SmsVerification")
   .add(collectCode)
   .add(retryLoop)
   .add(retryPrompt)
+  .add(pleaseHold)
   .add(setRemainingAttempts)
   .add(incorrectCodePrompt)
   .add(verifyCode)
