@@ -932,7 +932,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1003,7 +1003,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1074,7 +1074,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1145,7 +1145,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1216,7 +1216,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+          "AgentWhisper": "71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {

@@ -7,7 +7,7 @@ import {
   InvokeLambdaFunctionActionBuilder,
   LoopActionBuilder,
   MessageParticipantActionBuilder,
-  SetWhisperFlowActionBuilder,
+  SetAgentWhisperFlowActionBuilder,
   TransferContactToQueueActionBuilder,
   UpdateContactAttributesActionBuilder,
   UpdateContactTargetQueueActionBuilder,
@@ -284,7 +284,7 @@ function queueTransferPair(
     .next(`${transferActionId}SetWhisper`)
     .build();
 
-  const setWhisper = new SetWhisperFlowActionBuilder(
+  const setWhisper = new SetAgentWhisperFlowActionBuilder(
     `${transferActionId}SetWhisper`,
   )
     .whisperFlowId(AGENT_WHISPER_FLOW_ID)

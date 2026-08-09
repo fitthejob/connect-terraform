@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-connect": "^3.0.0",
-    "@fitthejob/connect-flow-builder": "^0.2.5"
+    "@fitthejob/connect-flow-builder": "^0.2.6"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
