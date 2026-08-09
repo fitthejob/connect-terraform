@@ -1,162 +1,373 @@
 {
   "Version": "2019-10-30",
-  "StartAction": "Greeting",
+  "StartAction": "PublishInitiated",
   "Metadata": {
     "entryPointPosition": {
       "x": 20,
       "y": 20
     },
     "ActionMetadata": {
-      "Greeting": {
+      "PublishInitiated": {
         "position": {
           "x": 280,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "RetryLoop": {
+      "InvokeCustomerLookup": {
         "position": {
           "x": 540,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "MenuInput": {
+      "Greeting": {
         "position": {
           "x": 800,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "SetQueueGeneral": {
+      "RetryLoop": {
         "position": {
-          "x": 800,
+          "x": 1060,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "MenuInput": {
+        "position": {
+          "x": 1320,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetIntentGeneral": {
+        "position": {
+          "x": 1320,
           "y": 620
         },
         "isFriendlyName": true
       },
-      "SetQueueClaims": {
+      "SetIntentClaims": {
         "position": {
-          "x": 1060,
+          "x": 1580,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "SetQueueBenefits": {
+      "SetIntentBenefits": {
         "position": {
-          "x": 1060,
+          "x": 1580,
           "y": 220
         },
         "isFriendlyName": true
       },
-      "SetQueueAuthorizations": {
+      "SetIntentAuthorizations": {
         "position": {
-          "x": 1060,
+          "x": 1580,
           "y": 420
         },
         "isFriendlyName": true
       },
-      "SetQueueBilling": {
+      "SetIntentBilling": {
         "position": {
-          "x": 1060,
+          "x": 1580,
           "y": 620
         },
         "isFriendlyName": true
       },
       "RetryPrompt": {
         "position": {
-          "x": 1060,
+          "x": 1580,
           "y": 820
         },
         "isFriendlyName": true
       },
-      "TransferGeneral": {
+      "PublishPostVerification": {
         "position": {
-          "x": 1060,
+          "x": 1580,
           "y": 1020
+        },
+        "isFriendlyName": true
+      },
+      "InvokeSmsVerification": {
+        "position": {
+          "x": 1840,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "InvokeRoutingDecision": {
+        "position": {
+          "x": 1840,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SetRoutingPriority": {
+        "position": {
+          "x": 2100,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueNameGeneral": {
+        "position": {
+          "x": 2100,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "ResolveQueueArn": {
+        "position": {
+          "x": 2360,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "PublishTransferred": {
+        "position": {
+          "x": 2360,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueNameClaims": {
+        "position": {
+          "x": 2620,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueNameBenefits": {
+        "position": {
+          "x": 2620,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueNameAuthorizations": {
+        "position": {
+          "x": 2620,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueNameBilling": {
+        "position": {
+          "x": 2620,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "CheckQueueForTransfer": {
+        "position": {
+          "x": 2620,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueClaims": {
+        "position": {
+          "x": 2880,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueBenefits": {
+        "position": {
+          "x": 2880,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueAuthorizations": {
+        "position": {
+          "x": 2880,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueBilling": {
+        "position": {
+          "x": 2880,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "SetQueueGeneral": {
+        "position": {
+          "x": 2880,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
+      "TransferClaimsSetWhisper": {
+        "position": {
+          "x": 3140,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "TransferBenefitsSetWhisper": {
+        "position": {
+          "x": 3140,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "TransferAuthorizationsSetWhisper": {
+        "position": {
+          "x": 3140,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "TransferBillingSetWhisper": {
+        "position": {
+          "x": 3140,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "TransferGeneralSetWhisper": {
+        "position": {
+          "x": 3140,
+          "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaims": {
         "position": {
-          "x": 1320,
+          "x": 3400,
           "y": 20
         },
         "isFriendlyName": true
       },
       "TransferBenefits": {
         "position": {
-          "x": 1320,
+          "x": 3400,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferAuthorizations": {
         "position": {
-          "x": 1320,
+          "x": 3400,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferBilling": {
         "position": {
-          "x": 1320,
+          "x": 3400,
           "y": 620
         },
         "isFriendlyName": true
       },
-      "TransferGeneralSetCallbackQueue": {
+      "TransferGeneral": {
         "position": {
-          "x": 1320,
+          "x": 3400,
           "y": 820
-        },
-        "isFriendlyName": true
-      },
-      "Disconnect": {
-        "position": {
-          "x": 1320,
-          "y": 1020
         },
         "isFriendlyName": true
       },
       "TransferClaimsSetCallbackQueue": {
         "position": {
-          "x": 1580,
+          "x": 3660,
           "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "Disconnect": {
+        "position": {
+          "x": 3660,
+          "y": 220
         },
         "isFriendlyName": true
       },
       "TransferBenefitsSetCallbackQueue": {
         "position": {
-          "x": 1580,
-          "y": 220
+          "x": 3660,
+          "y": 420
         },
         "isFriendlyName": true
       },
       "TransferAuthorizationsSetCallbackQueue": {
         "position": {
-          "x": 1580,
-          "y": 420
+          "x": 3660,
+          "y": 620
         },
         "isFriendlyName": true
       },
       "TransferBillingSetCallbackQueue": {
         "position": {
-          "x": 1580,
-          "y": 620
+          "x": 3660,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
+      "TransferGeneralSetCallbackQueue": {
+        "position": {
+          "x": 3660,
+          "y": 1020
         },
         "isFriendlyName": true
       },
       "InvokeCallbackOffer": {
         "position": {
-          "x": 1580,
-          "y": 820
+          "x": 3920,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "PublishDisconnected": {
+        "position": {
+          "x": 4180,
+          "y": 20
         },
         "isFriendlyName": true
       }
     }
   },
   "Actions": [
+    {
+      "Identifier": "PublishInitiated",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:contact-event-publisher-dev:live",
+        "LambdaInvocationAttributes": {
+          "EventType": "contact.initiated"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeCustomerLookup",
+        "Errors": [
+          {
+            "NextAction": "InvokeCustomerLookup",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "InvokeCustomerLookup",
+      "Type": "InvokeFlowModule",
+      "Parameters": {
+        "FlowModuleId": "fa99a32c-2b92-4f89-a396-c803daf005b4"
+      },
+      "Transitions": {
+        "NextAction": "Greeting",
+        "Errors": [
+          {
+            "NextAction": "Greeting",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
     {
       "Identifier": "Greeting",
       "Type": "MessageParticipant",
@@ -192,7 +403,7 @@
             }
           },
           {
-            "NextAction": "SetQueueGeneral",
+            "NextAction": "SetIntentGeneral",
             "Condition": {
               "Operator": "Equals",
               "Operands": [
@@ -216,7 +427,7 @@
         "NextAction": "RetryPrompt",
         "Conditions": [
           {
-            "NextAction": "SetQueueClaims",
+            "NextAction": "SetIntentClaims",
             "Condition": {
               "Operator": "Equals",
               "Operands": [
@@ -225,7 +436,7 @@
             }
           },
           {
-            "NextAction": "SetQueueBenefits",
+            "NextAction": "SetIntentBenefits",
             "Condition": {
               "Operator": "Equals",
               "Operands": [
@@ -234,7 +445,7 @@
             }
           },
           {
-            "NextAction": "SetQueueAuthorizations",
+            "NextAction": "SetIntentAuthorizations",
             "Condition": {
               "Operator": "Equals",
               "Operands": [
@@ -243,7 +454,7 @@
             }
           },
           {
-            "NextAction": "SetQueueBilling",
+            "NextAction": "SetIntentBilling",
             "Condition": {
               "Operator": "Equals",
               "Operands": [
@@ -285,10 +496,444 @@
       }
     },
     {
+      "Identifier": "SetIntentClaims",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Intent": "ClaimsIntent"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeSmsVerification",
+        "Errors": [
+          {
+            "NextAction": "InvokeSmsVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetIntentBenefits",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Intent": "BenefitsIntent"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeSmsVerification",
+        "Errors": [
+          {
+            "NextAction": "InvokeSmsVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetIntentAuthorizations",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Intent": "AuthorizationsIntent"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeSmsVerification",
+        "Errors": [
+          {
+            "NextAction": "InvokeSmsVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetIntentBilling",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Intent": "BillingIntent"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeSmsVerification",
+        "Errors": [
+          {
+            "NextAction": "InvokeSmsVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetIntentGeneral",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Intent": "FallbackIntent"
+        }
+      },
+      "Transitions": {
+        "NextAction": "PublishPostVerification",
+        "Errors": [
+          {
+            "NextAction": "PublishPostVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "InvokeSmsVerification",
+      "Type": "InvokeFlowModule",
+      "Parameters": {
+        "FlowModuleId": "7f2703b2-42db-4265-b56c-149ee0697f41"
+      },
+      "Transitions": {
+        "NextAction": "PublishPostVerification",
+        "Errors": [
+          {
+            "NextAction": "PublishPostVerification",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "PublishPostVerification",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:contact-event-publisher-dev:live",
+        "LambdaInvocationAttributes": {
+          "EventType": "verification.completed",
+          "VerificationStatus": "$.Attributes.VerificationStatus"
+        }
+      },
+      "Transitions": {
+        "NextAction": "InvokeRoutingDecision",
+        "Errors": [
+          {
+            "NextAction": "InvokeRoutingDecision",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "InvokeRoutingDecision",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:routing-decision-dev:live",
+        "LambdaInvocationAttributes": {
+          "Intent": "$.Attributes.Intent",
+          "CustomerStatus": "$.Attributes.CustomerStatus",
+          "VerificationStatus": "$.Attributes.VerificationStatus"
+        }
+      },
+      "Transitions": {
+        "NextAction": "SetRoutingPriority",
+        "Errors": [
+          {
+            "NextAction": "SetQueueNameGeneral",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetRoutingPriority",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "RoutingPriority": "$.External.routingPriority"
+        }
+      },
+      "Transitions": {
+        "NextAction": "ResolveQueueArn",
+        "Errors": [
+          {
+            "NextAction": "ResolveQueueArn",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "ResolveQueueArn",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.External.queueArn"
+      },
+      "Transitions": {
+        "NextAction": "SetQueueNameGeneral",
+        "Conditions": [
+          {
+            "NextAction": "SetQueueNameClaims",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueNameBenefits",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/26a7cd43-093a-4a28-aef6-18b2ee9fd943"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueNameAuthorizations",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueNameBilling",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/ef33ec80-8e64-433b-a099-97fb236d8fdc"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueNameGeneral",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "SetQueueNameGeneral",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueNameClaims",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Queue": "Claims"
+        }
+      },
+      "Transitions": {
+        "NextAction": "PublishTransferred",
+        "Errors": [
+          {
+            "NextAction": "PublishTransferred",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueNameBenefits",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Queue": "Benefits"
+        }
+      },
+      "Transitions": {
+        "NextAction": "PublishTransferred",
+        "Errors": [
+          {
+            "NextAction": "PublishTransferred",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueNameAuthorizations",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Queue": "Authorizations"
+        }
+      },
+      "Transitions": {
+        "NextAction": "PublishTransferred",
+        "Errors": [
+          {
+            "NextAction": "PublishTransferred",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueNameBilling",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Queue": "Billing"
+        }
+      },
+      "Transitions": {
+        "NextAction": "PublishTransferred",
+        "Errors": [
+          {
+            "NextAction": "PublishTransferred",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SetQueueNameGeneral",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "TargetContact": "Current",
+        "Attributes": {
+          "Queue": "General"
+        }
+      },
+      "Transitions": {
+        "NextAction": "PublishTransferred",
+        "Errors": [
+          {
+            "NextAction": "PublishTransferred",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "PublishTransferred",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:contact-event-publisher-dev:live",
+        "LambdaInvocationAttributes": {
+          "EventType": "contact.transferred",
+          "Queue": "$.Attributes.Queue",
+          "Intent": "$.Attributes.Intent"
+        }
+      },
+      "Transitions": {
+        "NextAction": "CheckQueueForTransfer",
+        "Errors": [
+          {
+            "NextAction": "CheckQueueForTransfer",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "CheckQueueForTransfer",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.Attributes.Queue"
+      },
+      "Transitions": {
+        "NextAction": "SetQueueGeneral",
+        "Conditions": [
+          {
+            "NextAction": "SetQueueClaims",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Claims"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueBenefits",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Benefits"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueAuthorizations",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Authorizations"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueBilling",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Billing"
+              ]
+            }
+          },
+          {
+            "NextAction": "SetQueueGeneral",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "General"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "SetQueueGeneral",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
       "Identifier": "SetQueueClaims",
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
         "QueueId": "abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
+      },
+      "Transitions": {
+        "NextAction": "TransferClaimsSetWhisper",
+        "Errors": [
+          {
+            "NextAction": "TransferClaimsSetWhisper",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferClaimsSetWhisper",
+      "Type": "UpdateContactEventHooks",
+      "Parameters": {
+        "EventHooks": {
+          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+        }
       },
       "Transitions": {
         "NextAction": "TransferClaims",
@@ -344,6 +989,24 @@
         "QueueId": "26a7cd43-093a-4a28-aef6-18b2ee9fd943"
       },
       "Transitions": {
+        "NextAction": "TransferBenefitsSetWhisper",
+        "Errors": [
+          {
+            "NextAction": "TransferBenefitsSetWhisper",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferBenefitsSetWhisper",
+      "Type": "UpdateContactEventHooks",
+      "Parameters": {
+        "EventHooks": {
+          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+        }
+      },
+      "Transitions": {
         "NextAction": "TransferBenefits",
         "Errors": [
           {
@@ -395,6 +1058,24 @@
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
         "QueueId": "81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
+      },
+      "Transitions": {
+        "NextAction": "TransferAuthorizationsSetWhisper",
+        "Errors": [
+          {
+            "NextAction": "TransferAuthorizationsSetWhisper",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferAuthorizationsSetWhisper",
+      "Type": "UpdateContactEventHooks",
+      "Parameters": {
+        "EventHooks": {
+          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+        }
       },
       "Transitions": {
         "NextAction": "TransferAuthorizations",
@@ -450,6 +1131,24 @@
         "QueueId": "ef33ec80-8e64-433b-a099-97fb236d8fdc"
       },
       "Transitions": {
+        "NextAction": "TransferBillingSetWhisper",
+        "Errors": [
+          {
+            "NextAction": "TransferBillingSetWhisper",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferBillingSetWhisper",
+      "Type": "UpdateContactEventHooks",
+      "Parameters": {
+        "EventHooks": {
+          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+        }
+      },
+      "Transitions": {
         "NextAction": "TransferBilling",
         "Errors": [
           {
@@ -503,6 +1202,24 @@
         "QueueId": "9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
       },
       "Transitions": {
+        "NextAction": "TransferGeneralSetWhisper",
+        "Errors": [
+          {
+            "NextAction": "TransferGeneralSetWhisper",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "TransferGeneralSetWhisper",
+      "Type": "UpdateContactEventHooks",
+      "Parameters": {
+        "EventHooks": {
+          "CustomerWhisper": "71e238df-a57a-45e1-9129-458095c00713"
+        }
+      },
+      "Transitions": {
         "NextAction": "TransferGeneral",
         "Errors": [
           {
@@ -554,6 +1271,26 @@
       "Type": "InvokeFlowModule",
       "Parameters": {
         "FlowModuleId": "82faf241-b6dc-4e68-bd4f-39dbd578f75a"
+      },
+      "Transitions": {
+        "NextAction": "PublishDisconnected",
+        "Errors": [
+          {
+            "NextAction": "PublishDisconnected",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "PublishDisconnected",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "InvocationTimeLimitSeconds": "8",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:contact-event-publisher-dev:live",
+        "LambdaInvocationAttributes": {
+          "EventType": "contact.disconnected"
+        }
       },
       "Transitions": {
         "NextAction": "Disconnect",
