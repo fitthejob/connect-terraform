@@ -79,12 +79,24 @@ const collectCode = new ConnectParticipantWithLexBotActionBuilder(
   // confirmed via a live InvalidContactFlowModuleException regardless of
   // value type. The real, documented mechanism is entirely via
   // LexSessionAttributes: x-amz-lex:audio:start-timeout-ms controls how
-  // long Lex waits before assuming the caller isn't going to speak (voice
-  // input specifically; default 4000ms, max undocumented but under the
-  // related max-length-ms's 55000ms ceiling).
+  // long Lex waits before assuming the caller isn't going to provide ANY
+  // input at all -- confirmed live via describe-slot that startTimeoutMs is
+  // a single field shared by both audio and DTMF within
+  // audioAndDTMFInputSpecification, not split per-modality despite the
+  // "audio:" prefix in the attribute name (default 4000ms, max undocumented
+  // but under the related max-length-ms's 55000ms ceiling).
   .sessionAttribute(
     "x-amz-lex:audio:start-timeout-ms:VerificationCodeIntent:VerificationCode",
     "45000",
+  )
+  // Separate from the start timeout above: once DTMF entry has begun, this
+  // governs how long Lex waits after the LAST digit before deciding entry
+  // is complete -- confirmed live via describe-slot's dtmfSpecification
+  // defaulting to 5000ms. Raised to reduce "we didn't catch that" firing
+  // during natural pauses while reading a 6-digit code back digit-by-digit.
+  .sessionAttribute(
+    "x-amz-lex:dtmf:end-timeout-ms:VerificationCodeIntent:VerificationCode",
+    "10000",
   )
   .whenIntentEquals("VerificationCodeIntent", "VerifyCode")
   .onInputTimeLimitExceeded("RetryPrompt")
