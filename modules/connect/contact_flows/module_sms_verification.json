@@ -28,7 +28,7 @@
         },
         "isFriendlyName": true
       },
-      "PleaseHold": {
+      "VerifyCode": {
         "position": {
           "x": 800,
           "y": 20
@@ -49,28 +49,42 @@
         },
         "isFriendlyName": true
       },
-      "VerifyCode": {
+      "CheckVerificationResult": {
         "position": {
           "x": 1060,
           "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "VerificationFailed": {
+        "position": {
+          "x": 1060,
+          "y": 420
         },
         "isFriendlyName": true
       },
       "RetryLoop": {
         "position": {
           "x": 1060,
-          "y": 220
+          "y": 620
         },
         "isFriendlyName": true
       },
-      "CheckVerificationResult": {
+      "SetVerified": {
         "position": {
           "x": 1320,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "VerificationFailed": {
+      "SetRemainingAttempts": {
+        "position": {
+          "x": 1320,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SetExpiredAttributes": {
         "position": {
           "x": 1320,
           "y": 420
@@ -84,45 +98,24 @@
         },
         "isFriendlyName": true
       },
-      "SetVerified": {
-        "position": {
-          "x": 1580,
-          "y": 20
-        },
-        "isFriendlyName": true
-      },
-      "SetRemainingAttempts": {
-        "position": {
-          "x": 1580,
-          "y": 220
-        },
-        "isFriendlyName": true
-      },
-      "SetExpiredAttributes": {
-        "position": {
-          "x": 1580,
-          "y": 420
-        },
-        "isFriendlyName": true
-      },
       "SetFailedAttributes": {
         "position": {
-          "x": 1580,
-          "y": 620
-        },
-        "isFriendlyName": true
-      },
-      "SetMaxAttemptsAttributes": {
-        "position": {
-          "x": 1580,
+          "x": 1320,
           "y": 820
         },
         "isFriendlyName": true
       },
       "IncorrectCodePrompt": {
         "position": {
-          "x": 1840,
+          "x": 1580,
           "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetMaxAttemptsAttributes": {
+        "position": {
+          "x": 1580,
+          "y": 220
         },
         "isFriendlyName": true
       }
@@ -184,7 +177,7 @@
         "NextAction": "RetryPrompt",
         "Conditions": [
           {
-            "NextAction": "PleaseHold",
+            "NextAction": "VerifyCode",
             "Condition": {
               "Operator": "Equals",
               "Operands": [
@@ -250,22 +243,6 @@
         "Errors": [
           {
             "NextAction": "RetryLoop",
-            "ErrorType": "NoMatchingError"
-          }
-        ]
-      }
-    },
-    {
-      "Identifier": "PleaseHold",
-      "Type": "MessageParticipant",
-      "Parameters": {
-        "Text": "One moment while we verify that code."
-      },
-      "Transitions": {
-        "NextAction": "VerifyCode",
-        "Errors": [
-          {
-            "NextAction": "VerifyCode",
             "ErrorType": "NoMatchingError"
           }
         ]
