@@ -11,6 +11,7 @@ import {
   TransferContactToQueueActionBuilder,
   UpdateContactAttributesActionBuilder,
   UpdateContactTargetQueueActionBuilder,
+  UpdateFlowLoggingBehaviorActionBuilder,
   equalsCondition,
 } from "@fitthejob/connect-flow-builder";
 import { writeFileSync } from "node:fs";
@@ -75,6 +76,22 @@ function publishEvent(
   // catch block).
   return builder.next(next).onError(next).build();
 }
+
+// TEMPORARY diagnostic: propagates forward to every module invoked later in
+// the same contact segment (AWS-documented behavior, confirmed working in
+// Phase 3 debugging via module-test-wrapper-flow.ts's identical pattern).
+// Added to investigate why module-sms-verification's CollectCode action
+// fires "we didn't catch that" in well under 5 seconds despite
+// x-amz-lex:audio:start-timeout-ms being set to 45000ms -- need to see the
+// real LexSessionAttributes Lex received and the actual error/timing from
+// CloudWatch flow logs, not just what the generated JSON says was sent.
+// Remove once resolved.
+const enableLogging = new UpdateFlowLoggingBehaviorActionBuilder(
+  "EnableLogging",
+)
+  .enabled()
+  .next("PublishInitiated")
+  .build();
 
 const publishInitiated = publishEvent(
   "PublishInitiated",
@@ -383,7 +400,8 @@ const invokeCallbackOffer = new InvokeFlowModuleActionBuilder(
   .build();
 
 const flow = new FlowBuilder("MainInbound")
-  .startWith(publishInitiated)
+  .startWith(enableLogging)
+  .add(publishInitiated)
   .add(invokeCustomerLookup)
   .add(greeting)
   .add(retryLoop)
