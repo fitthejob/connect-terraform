@@ -428,6 +428,10 @@
         "Text": "For claims, press or say 1. For benefits, press or say 2. For authorizations, press or say 3. For billing, press or say 4.",
         "LexV2Bot": {
           "AliasArn": "arn:aws:lex:us-east-1:084396578198:bot-alias/AOEWLIZGX8/H5SJSUACSG"
+        },
+        "LexSessionAttributes": {
+          "x-amz-lex:allow-audio-input:*:*": "true",
+          "x-amz-lex:allow-dtmf-input:*:*": "true"
         }
       },
       "Transitions": {
