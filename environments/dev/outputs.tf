@@ -62,3 +62,48 @@ output "agent_whisper_flow_id" {
   description = "Contact flow ID of the shared Agent Whisper flow"
   value       = module.connect.agent_whisper_flow_id
 }
+
+output "customer_lookup_lambda_arn" {
+  description = "Alias ARN of the customer-lookup Lambda"
+  value       = module.lambda_customer_lookup.alias_arn
+}
+
+output "routing_decision_lambda_arn" {
+  description = "Alias ARN of the routing-decision Lambda"
+  value       = module.lambda_routing_decision.alias_arn
+}
+
+output "sms_verification_lambda_arn" {
+  description = "Alias ARN of the sms-verification Lambda"
+  value       = module.lambda_sms_verification.alias_arn
+}
+
+output "contact_event_publisher_lambda_arn" {
+  description = "Alias ARN of the contact-event-publisher Lambda"
+  value       = module.lambda_contact_event_publisher.alias_arn
+}
+
+output "queue_claims_arn" {
+  description = "Claims Queue ARN"
+  value       = module.connect.queue_claims_arn
+}
+
+output "queue_benefits_arn" {
+  description = "Benefits Queue ARN"
+  value       = module.connect.queue_benefits_arn
+}
+
+output "queue_authorizations_arn" {
+  description = "Authorizations Queue ARN"
+  value       = module.connect.queue_authorizations_arn
+}
+
+output "queue_billing_arn" {
+  description = "Billing Queue ARN"
+  value       = module.connect.queue_billing_arn
+}
+
+output "queue_general_arn" {
+  description = "General Queue ARN"
+  value       = module.connect.queue_general_arn
+}
