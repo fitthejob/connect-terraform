@@ -98,7 +98,7 @@
         },
         "isFriendlyName": true
       },
-      "Disconnect": {
+      "EndFlow": {
         "position": {
           "x": 1580,
           "y": 20
@@ -357,10 +357,10 @@
         "Text": "Claims call."
       },
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "EndFlow",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "EndFlow",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -373,10 +373,10 @@
         "Text": "Benefits call."
       },
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "EndFlow",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "EndFlow",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -389,10 +389,10 @@
         "Text": "Authorizations call."
       },
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "EndFlow",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "EndFlow",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -405,10 +405,10 @@
         "Text": "Billing call."
       },
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "EndFlow",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "EndFlow",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -421,18 +421,18 @@
         "Text": "General inquiry."
       },
       "Transitions": {
-        "NextAction": "Disconnect",
+        "NextAction": "EndFlow",
         "Errors": [
           {
-            "NextAction": "Disconnect",
+            "NextAction": "EndFlow",
             "ErrorType": "NoMatchingError"
           }
         ]
       }
     },
     {
-      "Identifier": "Disconnect",
-      "Type": "DisconnectParticipant",
+      "Identifier": "EndFlow",
+      "Type": "EndFlowExecution",
       "Parameters": {}
     }
   ]
