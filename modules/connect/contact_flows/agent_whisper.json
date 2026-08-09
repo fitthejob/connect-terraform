@@ -1,12 +1,439 @@
 {
   "Version": "2019-10-30",
-  "StartAction": "Disconnect",
+  "StartAction": "CheckVerification",
+  "Metadata": {
+    "entryPointPosition": {
+      "x": 20,
+      "y": 20
+    },
+    "ActionMetadata": {
+      "CheckVerification": {
+        "position": {
+          "x": 280,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SayVerified": {
+        "position": {
+          "x": 540,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SayNotVerified": {
+        "position": {
+          "x": 540,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "CheckCustomerStatus": {
+        "position": {
+          "x": 540,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SayKnownTier": {
+        "position": {
+          "x": 800,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SaySuspended": {
+        "position": {
+          "x": 800,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SayUnknownCustomer": {
+        "position": {
+          "x": 800,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "CheckQueue": {
+        "position": {
+          "x": 1060,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SayClaims": {
+        "position": {
+          "x": 1320,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SayBenefits": {
+        "position": {
+          "x": 1320,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "SayAuthorizations": {
+        "position": {
+          "x": 1320,
+          "y": 420
+        },
+        "isFriendlyName": true
+      },
+      "SayBilling": {
+        "position": {
+          "x": 1320,
+          "y": 620
+        },
+        "isFriendlyName": true
+      },
+      "SayGeneral": {
+        "position": {
+          "x": 1320,
+          "y": 820
+        },
+        "isFriendlyName": true
+      },
+      "Disconnect": {
+        "position": {
+          "x": 1580,
+          "y": 20
+        },
+        "isFriendlyName": true
+      }
+    }
+  },
   "Actions": [
+    {
+      "Identifier": "CheckVerification",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.Attributes.VerificationStatus"
+      },
+      "Transitions": {
+        "NextAction": "CheckCustomerStatus",
+        "Conditions": [
+          {
+            "NextAction": "SayVerified",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "VERIFIED"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayNotVerified",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayNotVerified",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "EXPIRED"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayNotVerified",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "MAX_ATTEMPTS_EXCEEDED"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "CheckCustomerStatus",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayVerified",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Identity verified."
+      },
+      "Transitions": {
+        "NextAction": "CheckCustomerStatus",
+        "Errors": [
+          {
+            "NextAction": "CheckCustomerStatus",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayNotVerified",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Caller was not able to verify their identity -- proceed with standard authentication."
+      },
+      "Transitions": {
+        "NextAction": "CheckCustomerStatus",
+        "Errors": [
+          {
+            "NextAction": "CheckCustomerStatus",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "CheckCustomerStatus",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.Attributes.CustomerStatus"
+      },
+      "Transitions": {
+        "NextAction": "SayUnknownCustomer",
+        "Conditions": [
+          {
+            "NextAction": "SayKnownTier",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "KNOWN"
+              ]
+            }
+          },
+          {
+            "NextAction": "SaySuspended",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "SUSPENDED"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayUnknownCustomer",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "UNKNOWN"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "SayUnknownCustomer",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayKnownTier",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Returning customer, tier: $.Attributes.CustomerTier."
+      },
+      "Transitions": {
+        "NextAction": "CheckQueue",
+        "Errors": [
+          {
+            "NextAction": "CheckQueue",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SaySuspended",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Caller's account is flagged suspended -- handle per suspended-account procedure."
+      },
+      "Transitions": {
+        "NextAction": "CheckQueue",
+        "Errors": [
+          {
+            "NextAction": "CheckQueue",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayUnknownCustomer",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "New or unrecognized caller."
+      },
+      "Transitions": {
+        "NextAction": "CheckQueue",
+        "Errors": [
+          {
+            "NextAction": "CheckQueue",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "CheckQueue",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.Attributes.Queue"
+      },
+      "Transitions": {
+        "NextAction": "SayGeneral",
+        "Conditions": [
+          {
+            "NextAction": "SayClaims",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Claims"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayBenefits",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Benefits"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayAuthorizations",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Authorizations"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayBilling",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "Billing"
+              ]
+            }
+          },
+          {
+            "NextAction": "SayGeneral",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "General"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "SayGeneral",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayClaims",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Claims call."
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayBenefits",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Benefits call."
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayAuthorizations",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Authorizations call."
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayBilling",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Billing call."
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "SayGeneral",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "General inquiry."
+      },
+      "Transitions": {
+        "NextAction": "Disconnect",
+        "Errors": [
+          {
+            "NextAction": "Disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
     {
       "Identifier": "Disconnect",
       "Type": "DisconnectParticipant",
-      "Parameters": {},
-      "Transitions": {}
+      "Parameters": {}
     }
   ]
 }

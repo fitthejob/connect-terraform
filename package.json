@@ -6,6 +6,7 @@
   "description": "Flow-authoring tooling for the mini-connect Terraform infrastructure",
   "scripts": {
     "generate:main-inbound-flow": "tsx scripts/main-inbound-flow.ts",
+    "generate:agent-whisper-flow": "tsx scripts/agent-whisper-flow.ts",
     "generate:callback-offer-flow": "tsx scripts/callback-offer-flow.ts",
     "generate:module-customer-lookup-flow": "tsx scripts/module-customer-lookup-flow.ts",
     "generate:module-sms-verification-flow": "tsx scripts/module-sms-verification-flow.ts",
