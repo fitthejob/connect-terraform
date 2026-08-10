@@ -3,14 +3,18 @@
 Terraform infrastructure-as-code for an Amazon Connect contact center
 prototype: queues, a routing profile, contact flows/modules, a Lex V2 bot,
 and a handful of Lambdas providing customer lookup, routing decisions, SMS
-verification, and event publishing — provisioned against a pre-existing
-Connect instance (looked up by alias, not created by this repo).
+verification, and event publishing. Infrastructure is provisioned against a
+pre-existing Connect instance (looked up by alias, not created by this
+repo).
 
-**This is an explicit prototype**, not a production system. Several things
-are deliberately deferred rather than built out — see "Deliberately
-deferred" below and `.checkov.yml`.
+**This is an explicit prototype**, not a production system. The primary use
+of this repo is to validate Terraform builds and contact flows against a
+live instance, test features, fine-tune UX, and templatize
+Terraform-managed resources. Several things are deliberately deferred
+rather than built out; see "Deliberately deferred" below and
+`.checkov.yml`.
 
-## Architecture
+## Current Architecture
 
 Four environments — `bootstrap`, `dev`, `staging`, `prod` — under
 `environments/`, sharing reusable modules under `modules/`. `bootstrap`
@@ -42,47 +46,37 @@ Amazon Connect instance (pre-existing, looked up by alias)
       + one routing profile
 ```
 
-Every Lambda a flow/module invokes needs its own
-`aws_connect_lambda_function_association` — without it, Connect never had
-`lambda:InvokeFunction` permission and the invoke fails silently (falls
-through to the error transition, zero CloudWatch metrics, looks like the
-Lambda "ran" when it never did). This bit twice during Phase 1–3 build-out;
-see the "Known gotchas" section of `CLAUDE.md` for the live-debugged detail.
-
 ## Key architectural decisions
 
 - **Connect instance is looked up, not created.** This repo provisions
   resources *against* an existing instance (`data.tf` in `modules/connect`),
   not the instance itself.
-- **`bootstrap` is separate and manual-only.** It creates the IAM roles that
-  every other environment's CI workflow assumes. It is never run by CI —
-  only by a human with standing AWS credentials — because the deploy role's
+- **`bootstrap` is separate and manual-only.** The bootstrap module creates the IAM roles that
+  every other environment's CI workflow assumes. It is never run by CI, only by a human with standing AWS credentials, because the deploy role's
   own permissions are what this module manages; if a bad change breaks that
   policy, the deploy role may no longer be able to fix itself. Keeping the
   fix path outside the thing that might be broken means there's always a
   way back in.
 - **`staging`/`prod` promote artifacts, they don't rebuild them.** `dev`
   derives its Lambda/layer S3 keys from the pushing commit's SHA (built
-  fresh by CI); `staging`/`prod` instead take a pre-set S3 key — the exact
+  fresh by CI); `staging`/`prod` instead take a pre-set S3 key -- the exact
   artifact that already passed dev. This is intentional, not drift.
 - **`deploy-prod.yml` is `workflow_dispatch`-only**, not auto-chained from
-  staging. A deliberate human gate for the last hop, not an incomplete
-  pipeline.
+  staging. A deliberate human gate for prod apply.
 - **Two IAM roles, both hand-scoped, one prototype-wide `resources = ["*"]`
   gap.** `ConnectManage`/`ConnectReadOnly` statements use `["*"]` for
   Connect actions that could in principle be scoped to the specific
   instance ARN — `modules/iam` doesn't currently take an instance ID as an
-  input. Deliberately deferred, tracked in `CLAUDE.md`'s TODOs.
+  input. Deliberately deferred, tracked in gitignored TODOs.
 - **Flow-authoring goes through a package, not hand-written JSON.**
   `@fitthejob/connect-flow-builder` (a separate npm package,
   `github.com/fitthejob/connect-flow-builder`) generates the actual
   `contact_flows/*.json` files. Validator gaps found while building this
-  repo's flows get fixed upstream in that package, not patched locally.
+  repo's flows get patched upstream in that package.
 
 ## Deliberately deferred (prototype-vs-production tradeoffs)
 
-Documented in `.checkov.yml` and `CLAUDE.md`'s TODO list — don't "fix"
-these without asking, they're tracked tradeoffs:
+Documented in `.checkov.yml` and gitignored TODO list:
 
 - Lambda VPC isolation (`CKV_AWS_117`)
 - Lambda code-signing (`CKV_AWS_272`)
@@ -93,8 +87,7 @@ these without asking, they're tracked tradeoffs:
 
 A few bugs surfaced during build-out were costly enough — in debugging time,
 or in how silently they failed — that they're worth knowing before touching
-related code. Full detail lives in `CLAUDE.md`'s "Known gotchas" section;
-summarized here:
+related code.
 
 - **A Connect-invoked Lambda's real `ContactId` lives under
   `event.Details.ContactData.ContactId`, not `event.Details.ContactId`.**
@@ -123,7 +116,7 @@ summarized here:
   `AMAZON.AlphaNumeric` seemed like the right choice for a 6-digit
   verification code (exact string match, leading zeros preserved) but its
   ASR grammar is tuned for spelled-out confirmation codes, not digit-by-
-  digit spoken input — confirmed live, spoken codes consistently failed to
+  digit spoken input. This behavior was confirmed live, spoken codes consistently failed to
   match despite DTMF entry of the same code working. `AMAZON.PhoneNumber`
   is the correct choice for spoken PIN-style input: it converts to a
   numeric string (not an integer, so leading zeros survive) and its ASR
@@ -133,8 +126,8 @@ summarized here:
   `NoMatchingCondition` — Connect rejects flow/module content missing it,
   but only at the real API level (`InvalidContactFlowModuleException` via
   CloudTrail), not via any local validator.
-- **`CONTACT_FLOW_MODULE` content requires a top-level `Settings` block**
-  (`InputParameters`, `OutputParameters`, `Transitions`) — omitting it fails
+- **`CONTACT_FLOW_MODULE` JSON content requires a top-level `Settings` block**
+  (`InputParameters`, `OutputParameters`, `Transitions`); omitting it fails
   `CreateContactFlowModule`/`UpdateContactFlowModuleContent` outright, again
   only visible against the real API.
 
@@ -152,17 +145,10 @@ terraform apply
 ```
 
 Flow-authoring tooling and the eligibility-check Lambda source each have
-their own `npm install` + build/generate commands — see `CLAUDE.md` for the
-full command reference and CI/CD workflow breakdown.
+their own `npm install` + build/generate commands.
 
-## Where to go next
+## In-repo documentation
 
-- **`CLAUDE.md`** — the living working-notes doc: repo structure detail,
-  every command, CI/CD wiring, security scanning config, and a dated log of
-  every gotcha discovered during build-out. Start there for anything this
-  README doesn't answer.
 - **`modules/lex/README.md`**, **`modules/iam/README.md`** — per-module
   detail for the two modules with the most non-obvious design decisions.
-- **`docs/superpowers/specs/`** — phased build plan and design docs for
-  individual features (Lex menu bot, IAM-as-Terraform migration, callback
-  queue module).
+
