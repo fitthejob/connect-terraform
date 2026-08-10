@@ -119,11 +119,8 @@ const invokeCustomerLookup = new InvokeFlowModuleActionBuilder(
 // --- Menu capture (Lex + DTMF fallback, unchanged from the prior flow) ---
 
 const greeting = new MessageParticipantActionBuilder("Greeting")
-  .text(
-    "Thanks for calling. For claims, press or say 1. For benefits, press or say 2. " +
-      "For authorizations, press or say 3. For billing, press or say 4.",
-  )
-  .next("RetryLoop")
+  .text("Thank you for your call.")
+  .next("MenuInput")
   .build();
 
 const retryLoop = new LoopActionBuilder("RetryLoop")
@@ -347,10 +344,22 @@ function queueTransferPair(
   return [setQueue, setWhisper, transfer, setCallbackQueueId];
 }
 
-const [setQueueClaims, setWhisperClaims, transferClaims, setCallbackQueueClaims] =
-  queueTransferPair("SetQueueClaims", "TransferClaims", QUEUE_CLAIMS_ID);
-const [setQueueBenefits, setWhisperBenefits, transferBenefits, setCallbackQueueBenefits] =
-  queueTransferPair("SetQueueBenefits", "TransferBenefits", QUEUE_BENEFITS_ID);
+const [
+  setQueueClaims,
+  setWhisperClaims,
+  transferClaims,
+  setCallbackQueueClaims,
+] = queueTransferPair("SetQueueClaims", "TransferClaims", QUEUE_CLAIMS_ID);
+const [
+  setQueueBenefits,
+  setWhisperBenefits,
+  transferBenefits,
+  setCallbackQueueBenefits,
+] = queueTransferPair(
+  "SetQueueBenefits",
+  "TransferBenefits",
+  QUEUE_BENEFITS_ID,
+);
 const [
   setQueueAuthorizations,
   setWhisperAuthorizations,
@@ -361,10 +370,18 @@ const [
   "TransferAuthorizations",
   QUEUE_AUTHORIZATIONS_ID,
 );
-const [setQueueBilling, setWhisperBilling, transferBilling, setCallbackQueueBilling] =
-  queueTransferPair("SetQueueBilling", "TransferBilling", QUEUE_BILLING_ID);
-const [setQueueGeneral, setWhisperGeneral, transferGeneral, setCallbackQueueGeneral] =
-  queueTransferPair("SetQueueGeneral", "TransferGeneral", QUEUE_GENERAL_ID);
+const [
+  setQueueBilling,
+  setWhisperBilling,
+  transferBilling,
+  setCallbackQueueBilling,
+] = queueTransferPair("SetQueueBilling", "TransferBilling", QUEUE_BILLING_ID);
+const [
+  setQueueGeneral,
+  setWhisperGeneral,
+  transferGeneral,
+  setCallbackQueueGeneral,
+] = queueTransferPair("SetQueueGeneral", "TransferGeneral", QUEUE_GENERAL_ID);
 
 const checkQueueForTransfer = new CompareActionBuilder("CheckQueueForTransfer")
   .comparisonValue("$.Attributes.Queue")
