@@ -35,310 +35,310 @@
         },
         "isFriendlyName": true
       },
-      "RetryLoop": {
+      "MenuInput": {
         "position": {
           "x": 1320,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "MenuInput": {
-        "position": {
-          "x": 1580,
-          "y": 20
-        },
-        "isFriendlyName": true
-      },
-      "SetIntentGeneral": {
-        "position": {
-          "x": 1580,
-          "y": 620
-        },
-        "isFriendlyName": true
-      },
       "SetIntentClaims": {
         "position": {
-          "x": 1840,
+          "x": 1580,
           "y": 20
         },
         "isFriendlyName": true
       },
       "SetIntentBenefits": {
         "position": {
-          "x": 1840,
+          "x": 1580,
           "y": 220
         },
         "isFriendlyName": true
       },
       "SetIntentAuthorizations": {
         "position": {
-          "x": 1840,
+          "x": 1580,
           "y": 420
         },
         "isFriendlyName": true
       },
       "SetIntentBilling": {
         "position": {
-          "x": 1840,
+          "x": 1580,
           "y": 620
         },
         "isFriendlyName": true
       },
       "RetryPrompt": {
         "position": {
-          "x": 1840,
+          "x": 1580,
           "y": 820
         },
         "isFriendlyName": true
       },
-      "PublishPostVerification": {
+      "InvokeSmsVerification": {
         "position": {
           "x": 1840,
-          "y": 1020
+          "y": 20
         },
         "isFriendlyName": true
       },
-      "InvokeSmsVerification": {
+      "RetryLoop": {
+        "position": {
+          "x": 1840,
+          "y": 220
+        },
+        "isFriendlyName": true
+      },
+      "PublishPostVerification": {
         "position": {
           "x": 2100,
           "y": 20
         },
         "isFriendlyName": true
       },
-      "InvokeRoutingDecision": {
+      "SetIntentGeneral": {
         "position": {
           "x": 2100,
           "y": 220
         },
         "isFriendlyName": true
       },
-      "SetRoutingPriority": {
+      "InvokeRoutingDecision": {
         "position": {
           "x": 2360,
+          "y": 20
+        },
+        "isFriendlyName": true
+      },
+      "SetRoutingPriority": {
+        "position": {
+          "x": 2620,
           "y": 20
         },
         "isFriendlyName": true
       },
       "SetQueueNameGeneral": {
         "position": {
-          "x": 2360,
+          "x": 2620,
           "y": 220
         },
         "isFriendlyName": true
       },
       "ResolveQueueArn": {
         "position": {
-          "x": 2620,
+          "x": 2880,
           "y": 20
         },
         "isFriendlyName": true
       },
       "PublishTransferred": {
         "position": {
-          "x": 2620,
+          "x": 2880,
           "y": 420
         },
         "isFriendlyName": true
       },
       "SetQueueNameClaims": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 20
         },
         "isFriendlyName": true
       },
       "SetQueueNameBenefits": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 220
         },
         "isFriendlyName": true
       },
       "SetQueueNameAuthorizations": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 420
         },
         "isFriendlyName": true
       },
       "SetQueueNameBilling": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 620
         },
         "isFriendlyName": true
       },
       "AnnounceResolvedQueue": {
         "position": {
-          "x": 2880,
+          "x": 3140,
           "y": 820
         },
         "isFriendlyName": true
       },
       "CheckQueueForTransfer": {
         "position": {
-          "x": 3140,
+          "x": 3400,
           "y": 20
         },
         "isFriendlyName": true
       },
       "SetQueueClaims": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 20
         },
         "isFriendlyName": true
       },
       "SetQueueBenefits": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 220
         },
         "isFriendlyName": true
       },
       "SetQueueAuthorizations": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 420
         },
         "isFriendlyName": true
       },
       "SetQueueBilling": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 620
         },
         "isFriendlyName": true
       },
       "SetQueueGeneral": {
         "position": {
-          "x": 3400,
+          "x": 3660,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaimsSetWhisper": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 20
         },
         "isFriendlyName": true
       },
       "TransferBenefitsSetWhisper": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferAuthorizationsSetWhisper": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferBillingSetWhisper": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 620
         },
         "isFriendlyName": true
       },
       "TransferGeneralSetWhisper": {
         "position": {
-          "x": 3660,
+          "x": 3920,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaims": {
         "position": {
-          "x": 3920,
+          "x": 4180,
           "y": 20
         },
         "isFriendlyName": true
       },
       "TransferBenefits": {
         "position": {
-          "x": 3920,
+          "x": 4180,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferAuthorizations": {
         "position": {
-          "x": 3920,
+          "x": 4180,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferBilling": {
         "position": {
-          "x": 3920,
+          "x": 4180,
           "y": 620
         },
         "isFriendlyName": true
       },
       "TransferGeneral": {
         "position": {
-          "x": 3920,
+          "x": 4180,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferClaimsSetCallbackQueue": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 20
         },
         "isFriendlyName": true
       },
       "Disconnect": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 220
         },
         "isFriendlyName": true
       },
       "TransferBenefitsSetCallbackQueue": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 420
         },
         "isFriendlyName": true
       },
       "TransferAuthorizationsSetCallbackQueue": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 620
         },
         "isFriendlyName": true
       },
       "TransferBillingSetCallbackQueue": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 820
         },
         "isFriendlyName": true
       },
       "TransferGeneralSetCallbackQueue": {
         "position": {
-          "x": 4180,
+          "x": 4440,
           "y": 1020
         },
         "isFriendlyName": true
       },
       "InvokeCallbackOffer": {
         "position": {
-          "x": 4440,
+          "x": 4700,
           "y": 20
         },
         "isFriendlyName": true
       },
       "PublishDisconnected": {
         "position": {
-          "x": 4700,
+          "x": 4960,
           "y": 20
         },
         "isFriendlyName": true
@@ -396,13 +396,13 @@
       "Identifier": "Greeting",
       "Type": "MessageParticipant",
       "Parameters": {
-        "Text": "Thanks for calling. For claims, press or say 1. For benefits, press or say 2. For authorizations, press or say 3. For billing, press or say 4."
+        "Text": "Thank you for your call."
       },
       "Transitions": {
-        "NextAction": "RetryLoop",
+        "NextAction": "MenuInput",
         "Errors": [
           {
-            "NextAction": "RetryLoop",
+            "NextAction": "MenuInput",
             "ErrorType": "NoMatchingError"
           }
         ]
