@@ -46,6 +46,10 @@ Amazon Connect instance (pre-existing, looked up by alias)
       + one routing profile
 ```
 
+## Note on contact flow JSON
+
+Contact flow JSON is typically gitignored in production deployments. AWS manages flow state and the JSON can contain account-specific ARNs. It is intentionally included here to demonstrate the output of [`@fitthejob/connect-flow-builder`](https://github.com/fitthejob/connect-flow-builder) and to serve as a concrete example of version-controlled contact flow definitions.
+
 ## Key architectural decisions
 
 - **Connect instance is looked up, not created.** This repo provisions
