@@ -110,6 +110,23 @@ module "lambda_contact_event_publisher" {
   event_bus_arn              = module.eventbridge_pipeline.bus_arn
 }
 
+module "lambda_abandonment_metric" {
+  source                     = "../../modules/lambda-abandonment-metric"
+  environment                = "dev"
+  s3_bucket_lambda_artifacts = var.s3_bucket_lambda_artifacts
+  function_name              = "abandonment-metric-dev"
+  s3_key                     = "abandonment-metric/dev/abandonment-metric-${var.artifact_sha}.zip"
+  layer_arn                  = module.layers.shared_deps_layer_arn
+  connect_instance_id        = module.connect.connect_instance_id
+  flow_log_group_name        = module.connect.flow_log_group_name
+}
+
+module "eventbridge_scheduler_abandonment_metric" {
+  source                  = "../../modules/eventbridge-scheduler-abandonment-metric"
+  environment             = "dev"
+  target_lambda_alias_arn = module.lambda_abandonment_metric.alias_arn
+}
+
 resource "aws_connect_lambda_function_association" "eligibility_check" {
   instance_id  = module.connect.connect_instance_id
   function_arn = module.lambda.lambda_eligibility_check_alias_arn
