@@ -67,6 +67,12 @@ locals {
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/lambda-*-${env}",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/lambda-*-${env}",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/connect-lex-menu-${env}-role",
+      # abandonment-metric feature's Scheduler-invoke role -- exact name,
+      # not a wildcard (modules/eventbridge-scheduler-abandonment-metric/main.tf's
+      # aws_iam_role.scheduler_invoke). This role has no attached
+      # aws_iam_policy (its permissions are an inline aws_iam_role_policy,
+      # which isn't a policy/* resource), so only the role ARN is listed.
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/eventbridge-scheduler-abandonment-metric-role-${env}",
     ]
   ])
 
@@ -90,9 +96,15 @@ locals {
     ]
   ])
 
+  # Exact table names only, no wildcard -- confirmed via a real AccessDenied
+  # on dynamodb:CreateTable for abandonment-metric-dedup-${env} during that
+  # feature's first terraform apply, since this local was previously
+  # hardcoded to just the single sms-verification-codes-${env} table. Add
+  # the exact name of any new DynamoDB table here going forward.
   dynamodb_scoped_resources = flatten([
     for env in var.environments : [
       "arn:aws:dynamodb:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/sms-verification-codes-${env}",
+      "arn:aws:dynamodb:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/abandonment-metric-dedup-${env}",
     ]
   ])
 }
@@ -450,6 +462,31 @@ data "aws_iam_policy_document" "deploy_permissions_contact_center" {
     # itself in most action contexts; scoped to alarm-name patterns once
     # Phase 2's alarm naming convention is decided.
     resources = ["*"]
+  }
+
+  # EventBridge Scheduler is a separate AWS service/action namespace
+  # (scheduler:*) from the EventBridge rules/bus API covered by
+  # EventBridgePipelineManage above (events:*) -- this repo had no prior
+  # aws_scheduler_schedule resource before the abandonment-metric feature,
+  # so no scheduler:* action existed anywhere in this file until now.
+  # Exact schedule ARN, no wildcard.
+  statement {
+    sid    = "EventBridgeSchedulerManage"
+    effect = "Allow"
+    actions = [
+      "scheduler:CreateSchedule",
+      "scheduler:GetSchedule",
+      "scheduler:UpdateSchedule",
+      "scheduler:DeleteSchedule",
+      "scheduler:TagResource",
+      "scheduler:UntagResource",
+      "scheduler:ListTagsForResource",
+    ]
+    resources = flatten([
+      for env in var.environments : [
+        "arn:aws:scheduler:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:schedule/default/abandonment-metric-poll-${env}",
+      ]
+    ])
   }
 }
 
