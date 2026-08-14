@@ -53,5 +53,16 @@ jobs:
           directory: .
           config_file: .checkov.yml
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Run abandonment-metric unit tests
+        working-directory: modules/lambda/src/abandonment-metric
+        run: |
+          npm install
+          npm test
+
       - name: Terraform Plan
         run: terraform plan -var="artifact_sha=${{ github.sha }}"
