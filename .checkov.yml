@@ -94,3 +94,13 @@ skip-check:
   # nothing to encrypt; this appears to be a Checkov false positive on
   # Lambda functions with a kms_key_arn set but no environment block.
   - CKV_AWS_173
+  # CKV_AWS_297: "Ensure EventBridge Scheduler Schedule uses Customer Managed
+  # Key (CMK)" — modules/eventbridge-scheduler-abandonment-metric's
+  # aws_scheduler_schedule uses AWS-owned default encryption. The schedule
+  # itself holds no customer data at rest, just a rate expression and a
+  # target ARN — same prototype-vs-production cost/key-management tradeoff
+  # already accepted for CKV_AWS_119 (DynamoDB CMK) above, applied to a new
+  # AWS service surface this repo hadn't used before this check ever fired.
+  # Deferred, not forgotten — revisit if a CMK-encryption requirement is
+  # ever mandated for this account.
+  - CKV_AWS_297
