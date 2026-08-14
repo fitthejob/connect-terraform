@@ -97,3 +97,8 @@ output "module_sms_verification_id" {
   description = "Contact flow module ID of the SmsVerification flow module"
   value       = aws_connect_contact_flow_module.module_sms_verification.contact_flow_module_id
 }
+
+output "flow_log_group_name" {
+  description = "CloudWatch log group name for this instance's Connect flow logs"
+  value       = "/aws/connect/${var.aws_connect_alias}"
+}
