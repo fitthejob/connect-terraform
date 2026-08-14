@@ -24,8 +24,13 @@ const LOOKBACK_MINUTES = Number(process.env.LOOKBACK_MINUTES ?? "6");
 // DynamoDB TTL is set by Terraform on the table itself (see
 // modules/lambda-abandonment-metric/main.tf); this Lambda only needs to
 // write a plausible expiresAt so records don't accumulate indefinitely if
-// the table's TTL config is ever changed independently.
-const DEDUP_TTL_SECONDS = LOOKBACK_MINUTES * 60 * 5; // 5x safety multiplier, per the design
+// the table's TTL config is ever changed independently. Sourced from the
+// DEDUP_TTL_SECONDS env var (set by Terraform from var.dedup_ttl_seconds)
+// rather than derived here, so the dedup TTL is configurable in one place
+// instead of hardcoded independently of the Terraform variable that already
+// exists for it. Fallback of 1800 matches the Terraform variable's own
+// default in case the env var is ever absent.
+const DEDUP_TTL_SECONDS = Number(process.env.DEDUP_TTL_SECONDS ?? "1800");
 
 async function alreadyProcessed(contactId: string): Promise<boolean> {
   const result = await ddb.send(
