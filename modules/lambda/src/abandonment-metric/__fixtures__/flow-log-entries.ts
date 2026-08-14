@@ -27,3 +27,28 @@ export const ABANDONED_ON_FIRST_BLOCK: FlowLogEntry[] = [
 ];
 
 export const EMPTY_LOG: FlowLogEntry[] = [];
+
+// RetryLoop re-enters CollectCode with the same ContactFlowName+Identifier
+// on each attempt. Abandoned on the SECOND attempt: attempt 1 starts and
+// completes (no match, looped back), attempt 2 starts and is never
+// completed. The nearest-match algorithm must not let attempt 1's
+// completion satisfy attempt 2's start.
+export const ABANDONED_ON_SECOND_RETRY_ATTEMPT: FlowLogEntry[] = [
+  { ContactFlowName: "Module-SmsVerification-dev", ContactFlowModuleType: "GetUserInput", Identifier: "CollectCode", Timestamp: "2026-08-14T17:00:00.000Z" },
+  { ContactFlowName: "Module-SmsVerification-dev", ContactFlowModuleType: "GetUserInput", Identifier: "CollectCode", Timestamp: "2026-08-14T17:00:05.000Z", Results: "NoMatchingCondition" },
+  { ContactFlowName: "Module-SmsVerification-dev", ContactFlowModuleType: "GetUserInput", Identifier: "CollectCode", Timestamp: "2026-08-14T17:00:10.000Z" },
+];
+
+// The specific bug scenario: abandoned on the FIRST attempt at CollectCode
+// (start@T1, no completion for that attempt), while a LATER, separate
+// invocation of the same block (start@T2, completion@T3) does complete.
+// A naive "any later completion for this key" check would wrongly treat
+// T1 as paired by T3. The correct answer is the T1 start entry -- that's
+// where the caller actually stopped responding; the later invocation
+// belongs to a different retry attempt entirely (e.g. a second, unrelated
+// contact leg or a re-entry the algorithm must not conflate with the first).
+export const ABANDONED_ON_FIRST_RETRY_ATTEMPT: FlowLogEntry[] = [
+  { ContactFlowName: "Module-SmsVerification-dev", ContactFlowModuleType: "GetUserInput", Identifier: "CollectCode", Timestamp: "2026-08-14T18:00:00.000Z" },
+  { ContactFlowName: "Module-SmsVerification-dev", ContactFlowModuleType: "GetUserInput", Identifier: "CollectCode", Timestamp: "2026-08-14T18:00:05.000Z" },
+  { ContactFlowName: "Module-SmsVerification-dev", ContactFlowModuleType: "GetUserInput", Identifier: "CollectCode", Timestamp: "2026-08-14T18:00:10.000Z", Results: "Success" },
+];
