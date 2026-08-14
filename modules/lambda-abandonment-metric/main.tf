@@ -175,12 +175,13 @@ resource "aws_sqs_queue_policy" "abandonment_metric_dlq" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
+        Effect    = "Allow"
+        Principal = { Service = "lambda.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.abandonment_metric_dlq.arn
+        Condition = {
+          ArnEquals = { "aws:SourceArn" = aws_lambda_function.abandonment_metric.arn }
         }
-        Action   = "sqs:SendMessage"
-        Resource = aws_sqs_queue.abandonment_metric_dlq.arn
       }
     ]
   })
@@ -203,12 +204,13 @@ resource "aws_lambda_function" "abandonment_metric" {
   timeout       = 60
   environment {
     variables = {
-      INSTANCE_ID      = var.connect_instance_id
-      LOG_GROUP_NAME   = var.flow_log_group_name
-      DEDUP_TABLE_NAME = aws_dynamodb_table.dedup.name
-      METRIC_NAMESPACE = var.metric_namespace
-      STAGE            = var.environment
-      LOOKBACK_MINUTES = tostring(var.lookback_minutes)
+      INSTANCE_ID       = var.connect_instance_id
+      LOG_GROUP_NAME    = var.flow_log_group_name
+      DEDUP_TABLE_NAME  = aws_dynamodb_table.dedup.name
+      METRIC_NAMESPACE  = var.metric_namespace
+      STAGE             = var.environment
+      LOOKBACK_MINUTES  = tostring(var.lookback_minutes)
+      DEDUP_TTL_SECONDS = tostring(var.dedup_ttl_seconds)
     }
   }
   layers = [var.layer_arn]
