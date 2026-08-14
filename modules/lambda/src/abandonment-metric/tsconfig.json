@@ -12,6 +12,9 @@
   },
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.test.ts",
+    "__fixtures__",
+    "vitest.config.ts"
   ]
 }
