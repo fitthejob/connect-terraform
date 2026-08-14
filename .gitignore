@@ -12,3 +12,5 @@ override.tf
 
 CLAUDE.md
 **/docs/
+
+scripts/dev-tools/measure-lag.sh
