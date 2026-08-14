@@ -110,6 +110,17 @@ module "lambda_contact_event_publisher" {
   event_bus_arn              = module.eventbridge_pipeline.bus_arn
 }
 
+# The abandonment-metric Lambda's lookback_minutes must stay roughly 2-3x
+# the EventBridge Scheduler's poll_interval_minutes (see the design's
+# Polling parameters section) so that overlapping poll windows reliably
+# catch a contact whose CTR/flow-log wasn't ready on the prior pass. Both
+# module blocks below derive their values from this single local instead of
+# relying on either module's own default, so the two can't silently drift
+# out of that relationship.
+locals {
+  abandonment_metric_poll_interval_minutes = 2
+}
+
 module "lambda_abandonment_metric" {
   source                     = "../../modules/lambda-abandonment-metric"
   environment                = "dev"
@@ -119,12 +130,14 @@ module "lambda_abandonment_metric" {
   layer_arn                  = module.layers.shared_deps_layer_arn
   connect_instance_id        = module.connect.connect_instance_id
   flow_log_group_name        = module.connect.flow_log_group_name
+  lookback_minutes           = local.abandonment_metric_poll_interval_minutes * 3
 }
 
 module "eventbridge_scheduler_abandonment_metric" {
   source                  = "../../modules/eventbridge-scheduler-abandonment-metric"
   environment             = "dev"
   target_lambda_alias_arn = module.lambda_abandonment_metric.alias_arn
+  poll_interval_minutes   = local.abandonment_metric_poll_interval_minutes
 }
 
 resource "aws_connect_lambda_function_association" "eligibility_check" {

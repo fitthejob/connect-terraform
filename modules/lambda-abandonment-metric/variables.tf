@@ -50,9 +50,3 @@ variable "dedup_ttl_seconds" {
   type        = number
   default     = 1800
 }
-
-variable "poll_interval_minutes" {
-  description = "Polling interval in minutes, consumed by Task 8's EventBridge Scheduler rule (not by this module directly) -- declared here so environments/dev/main.tf has one place to set it, matching the schedule expression needing to agree with the Lambda's own lookback config"
-  type        = number
-  default     = 2
-}

@@ -1,5 +1,10 @@
-import { ConnectClient, SearchContactsCommand, DescribeContactCommand } from "@aws-sdk/client-connect";
-import { CloudWatchLogsClient, FilterLogEventsCommand } from "@aws-sdk/client-cloudwatch-logs";
+import {
+  ConnectClient,
+  SearchContactsCommand,
+  DescribeContactCommand,
+  type ContactSearchSummary,
+} from "@aws-sdk/client-connect";
+import { CloudWatchLogsClient, FilterLogEventsCommand, type FilteredLogEvent } from "@aws-sdk/client-cloudwatch-logs";
 import { CloudWatchClient, PutMetricDataCommand, type PutMetricDataCommandInput } from "@aws-sdk/client-cloudwatch";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
@@ -49,14 +54,40 @@ async function markProcessed(contactId: string): Promise<void> {
   );
 }
 
-async function fetchFlowLogEntries(contactId: string): Promise<FlowLogEntry[]> {
-  const result = await logs.send(
-    new FilterLogEventsCommand({
-      logGroupName: LOG_GROUP_NAME,
-      filterPattern: `"${contactId}"`,
-    }),
-  );
-  return (result.events ?? [])
+// Bounds for the flow-log scan window around a contact's disconnect time.
+// A generous window that covers the full flow log for a contact (from
+// initiation through disconnect) while still bounding FilterLogEvents to a
+// narrow slice of the log group instead of its entire retention period.
+const FLOW_LOG_WINDOW_BEFORE_MS = 30 * 60 * 1000;
+const FLOW_LOG_WINDOW_AFTER_MS = 60 * 1000;
+
+async function fetchFlowLogEntries(contactId: string, disconnectTime: Date): Promise<FlowLogEntry[]> {
+  // DescribeContact's DisconnectTimestamp is typed as a Date by the SDK, but
+  // is not guaranteed to actually be a Date instance at runtime in every
+  // path that constructs a ContactRecord (e.g. it can round-trip through a
+  // plain object) -- normalize defensively via `new Date(...)` rather than
+  // assuming `.getTime()` is always safe to call directly.
+  const disconnectMs = new Date(disconnectTime).getTime();
+  const startTime = disconnectMs - FLOW_LOG_WINDOW_BEFORE_MS;
+  const endTime = disconnectMs + FLOW_LOG_WINDOW_AFTER_MS;
+
+  const events: FilteredLogEvent[] = [];
+  let nextToken: string | undefined;
+  do {
+    const result = await logs.send(
+      new FilterLogEventsCommand({
+        logGroupName: LOG_GROUP_NAME,
+        filterPattern: `"${contactId}"`,
+        startTime,
+        endTime,
+        nextToken,
+      }),
+    );
+    events.push(...(result.events ?? []));
+    nextToken = result.nextToken;
+  } while (nextToken !== undefined);
+
+  return events
     .map((e) => {
       try {
         return JSON.parse(e.message ?? "{}") as FlowLogEntry;
@@ -71,18 +102,25 @@ export const handler = async (): Promise<void> => {
   const lookbackMs = LOOKBACK_MINUTES * 60 * 1000;
   const startTime = new Date(Date.now() - lookbackMs);
 
-  const searchResult = await connect.send(
-    new SearchContactsCommand({
-      InstanceId: INSTANCE_ID,
-      TimeRange: {
-        Type: "DISCONNECT_TIMESTAMP",
-        StartTime: startTime,
-        EndTime: new Date(),
-      },
-    }),
-  );
+  const contacts: ContactSearchSummary[] = [];
+  let searchNextToken: string | undefined;
+  do {
+    const searchResult = await connect.send(
+      new SearchContactsCommand({
+        InstanceId: INSTANCE_ID,
+        TimeRange: {
+          Type: "DISCONNECT_TIMESTAMP",
+          StartTime: startTime,
+          EndTime: new Date(),
+        },
+        NextToken: searchNextToken,
+      }),
+    );
+    contacts.push(...(searchResult.Contacts ?? []));
+    searchNextToken = searchResult.NextToken;
+  } while (searchNextToken !== undefined);
 
-  for (const contact of searchResult.Contacts ?? []) {
+  for (const contact of contacts) {
     const contactId = contact.Id;
     if (!contactId) continue;
 
@@ -93,17 +131,18 @@ export const handler = async (): Promise<void> => {
     const describeResult = await connect.send(
       new DescribeContactCommand({ InstanceId: INSTANCE_ID, ContactId: contactId }),
     );
+    const disconnectTimestamp = describeResult.Contact?.DisconnectTimestamp;
     const record = {
       contactId,
       disconnectReason: describeResult.Contact?.DisconnectReason,
-      disconnectTimestamp: describeResult.Contact?.DisconnectTimestamp?.toString(),
+      disconnectTimestamp: disconnectTimestamp?.toString(),
     };
 
-    if (!isAbandonmentCandidate(record)) {
+    if (!isAbandonmentCandidate(record) || disconnectTimestamp === undefined) {
       continue;
     }
 
-    const flowLogEntries = await fetchFlowLogEntries(contactId);
+    const flowLogEntries = await fetchFlowLogEntries(contactId, disconnectTimestamp);
     const unpaired = findLastUnpairedEntry(flowLogEntries);
 
     if (unpaired) {
