@@ -112,3 +112,18 @@ output "queue_general_arn" {
   description = "General Queue ARN"
   value       = module.connect.queue_general_arn
 }
+
+output "abandonment_metric_function_arn" {
+  description = "ARN of the abandonment-metric Lambda"
+  value       = module.lambda_abandonment_metric.function_arn
+}
+
+output "abandonment_metric_dedup_table_name" {
+  description = "DynamoDB table name for the abandonment-metric Lambda's poll-cycle dedup"
+  value       = module.lambda_abandonment_metric.dedup_table_name
+}
+
+output "abandonment_metric_schedule_arn" {
+  description = "ARN of the EventBridge Scheduler rule polling the abandonment-metric Lambda"
+  value       = module.eventbridge_scheduler_abandonment_metric.schedule_arn
+}

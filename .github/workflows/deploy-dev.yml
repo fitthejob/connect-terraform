@@ -29,6 +29,8 @@ jobs:
             source_dir: contact-event-publisher
           - function: event-metric-subscriber
             source_dir: event-metric-subscriber
+          - function: abandonment-metric
+            source_dir: abandonment-metric
     steps:
       - uses: actions/checkout@v4
 
