@@ -692,9 +692,18 @@ data "aws_iam_policy_document" "load_test_permissions" {
   }
 }
 
+locals {
+  load_test_policy_json = var.permissions_profile == "load_test" ? data.aws_iam_policy_document.load_test_permissions[0].json : null
+  selected_policy_json = (
+    var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json :
+    var.permissions_profile == "pr_checks" ? data.aws_iam_policy_document.pr_checks_permissions[0].json :
+    local.load_test_policy_json
+  )
+}
+
 resource "aws_iam_policy" "this" {
   name   = coalesce(var.policy_name, var.role_name)
-  policy = var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json : data.aws_iam_policy_document.pr_checks_permissions[0].json
+  policy = local.selected_policy_json
 }
 
 resource "aws_iam_role_policy_attachment" "this" {
