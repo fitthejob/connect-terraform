@@ -660,6 +660,38 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
   }
 }
 
+data "aws_iam_policy_document" "load_test_permissions" {
+  count = var.permissions_profile == "load_test" ? 1 : 0
+
+  statement {
+    sid    = "ConnectTestCaseExecution"
+    effect = "Allow"
+    actions = [
+      "connect:StartTestCaseExecution",
+      "connect:GetTestCaseExecutionSummary",
+    ]
+    # Could be scoped to the specific Connect instance/test-case ARN, but
+    # modules/iam doesn't currently take the instance ID/alias as an input —
+    # same deferred follow-up as ConnectManage/ConnectReadOnly above.
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "DevStateBucketReadOnly"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+    ]
+    # Scoped to dev's specific state object only, not the whole bucket and
+    # not staging/prod's state — this role is dev-only (see spec's Phase 2
+    # scope decisions) and only needs to read connect_instance_id via
+    # `terraform output`, not write or lock state.
+    resources = [
+      "arn:aws:s3:::${var.tfstate_bucket}/connect/dev/terraform.tfstate",
+    ]
+  }
+}
+
 resource "aws_iam_policy" "this" {
   name   = coalesce(var.policy_name, var.role_name)
   policy = var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json : data.aws_iam_policy_document.pr_checks_permissions[0].json
