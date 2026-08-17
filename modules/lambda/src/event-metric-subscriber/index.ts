@@ -17,7 +17,6 @@ interface CustomEventBridgeEvent {
     queue?: string;
     intent?: string;
     verificationStatus?: string;
-    durationSeconds?: number;
     timestamp: string;
   };
 }
@@ -25,9 +24,13 @@ interface CustomEventBridgeEvent {
 // Amazon Connect's own native Contact Event shape (source: aws.connect),
 // distinct from this repo's custom contact-center-events-{env} bus shape
 // above -- different field names, no flat "timestamp", eventType nested
-// inside detail rather than being the detail-type itself. Confirmed live
-// 2026-08-17 (see modules/eventbridge-pipeline/main.tf's rule comment for
-// the detail-type value caveat).
+// inside detail rather than being the detail-type itself. The detail-type
+// value "Amazon Connect Contact Event" is confirmed correct (matches the
+// EventBridge service-event registry) -- see
+// modules/eventbridge-pipeline/main.tf's rule comment for the full
+// citation and a note on a misleading doc-sample naming discrepancy. Still
+// worth a belt-and-braces confirmation against a live event once this is
+// actually applied, not because the value is in doubt.
 interface NativeContactEvent {
   "detail-type": string;
   detail: {
@@ -49,7 +52,6 @@ function isNativeContactEvent(event: IncomingEvent): event is NativeContactEvent
 interface MetricPlan {
   metricName: string;
   dimensionField?: keyof CustomEventBridgeEvent["detail"];
-  valueField?: keyof CustomEventBridgeEvent["detail"];
 }
 
 // One entry per EventBridge rule this Lambda is subscribed to, for the
@@ -83,10 +85,6 @@ async function publishCustomMetric(event: CustomEventBridgeEvent): Promise<void>
     return;
   }
 
-  const value = plan.valueField && typeof event.detail[plan.valueField] === "number"
-    ? (event.detail[plan.valueField] as number)
-    : 1;
-
   const dimensionValue = plan.dimensionField ? event.detail[plan.dimensionField] : undefined;
 
   await cloudwatch.send(
@@ -95,8 +93,8 @@ async function publishCustomMetric(event: CustomEventBridgeEvent): Promise<void>
       MetricData: [
         {
           MetricName: plan.metricName,
-          Value: value,
-          Unit: plan.valueField ? "Seconds" : "Count",
+          Value: 1,
+          Unit: "Count",
           Timestamp: new Date(event.detail.timestamp),
           ...(dimensionValue
             ? { Dimensions: [{ Name: plan.dimensionField as string, Value: String(dimensionValue) }] }

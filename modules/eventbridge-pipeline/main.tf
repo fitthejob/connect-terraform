@@ -11,9 +11,13 @@ resource "aws_cloudwatch_event_archive" "contact_center" {
 
 locals {
   # One entry per rule: detail-type to match, and a short key used to name
-  # per-rule resources (DLQ, alarm, rule itself). All four rules target the
-  # same shared subscriber Lambda (var.subscriber_alias_arn) -- one
-  # concern (event -> CloudWatch metric), not four separate functions.
+  # per-rule resources (DLQ, alarm, rule itself). Both rules in this map
+  # target the same shared subscriber Lambda (var.subscriber_alias_arn) --
+  # one concern (event -> CloudWatch metric), not two separate functions.
+  # (The module as a whole defines a third rule, native_contact_events
+  # below, which also targets this same Lambda but isn't part of this map
+  # since it lives on the account's default bus, not this module's custom
+  # bus, and uses a different event_pattern shape.)
   #
   # contact_initiated and contact_disconnected were removed here --
   # Amazon Connect's native EventBridge Contact Events already provide
@@ -42,12 +46,19 @@ locals {
 # types (QUEUED, CONNECTED_TO_AGENT, COMPLETED, CONTACT_DATA_UPDATED,
 # etc.) not currently consumed by anything in this repo.
 #
-# detail-type value: AWS's own current documentation is inconsistent
-# between "Amazon Connect Contact Event" and "Connect Customer Contact
-# Event" across different doc pages -- confirm the real value against a
-# live event (see the eventbridge console's rule-testing tool, or
-# CloudWatch Logs on event-metric-subscriber after a real call) before
-# trusting this constant in a real apply. Update here if it differs.
+# detail-type value: confirmed correct as "Amazon Connect Contact Event" --
+# this matches the EventBridge service-event registry (events-ref-connect.html),
+# the authoritative source, and is also shown in an AWS Contact Center blog
+# post's console walkthrough. A second string, "Connect Customer Contact
+# Event", appears in one of AWS's own doc sample JSON blobs -- that's an
+# artifact of an in-progress "Amazon Connect" -> "Connect Customer" product
+# rebrand in AWS's docs (the sample blobs were partially rewritten to the
+# new name, but the service-event registry page was not); it is not a
+# second real value the API might send. Still worth a belt-and-braces
+# confirmation against a live event (eventbridge console's rule-testing
+# tool, or CloudWatch Logs on event-metric-subscriber after a real call)
+# once this is actually applied and exercised -- not because the value is
+# in doubt, just as normal first-live-run verification.
 resource "aws_cloudwatch_event_rule" "native_contact_events" {
   name = "contact-center-native-contact-events-${var.environment}"
 
