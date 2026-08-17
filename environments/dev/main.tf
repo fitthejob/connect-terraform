@@ -10,6 +10,8 @@ module "connect" {
   queue_billing_max_contacts        = var.queue_billing_max_contacts
   queue_general_max_contacts        = var.queue_general_max_contacts
   aws_lex_bot_alias_arn             = module.lex.bot_alias_arn
+  enable_load_test_sandbox          = true
+  connect_phone_number              = var.connect_phone_number
 }
 
 module "lex" {

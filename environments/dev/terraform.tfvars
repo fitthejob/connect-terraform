@@ -2,6 +2,8 @@ aws_connect_alias = "mini-connect"
 
 hours_of_operation_name = "Basic Hours"
 
+connect_phone_number = "+18553026099"
+
 queue_claims_max_contacts = 10
 
 queue_benefits_max_contacts = 10
