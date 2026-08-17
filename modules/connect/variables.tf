@@ -52,3 +52,15 @@ variable "aws_lex_bot_alias_arn" {
   description = "ARN of the Lex bot alias to associate with this Connect instance"
   type        = string
 }
+
+variable "enable_load_test_sandbox" {
+  description = "Whether to provision the Load-Test-Sandbox-{env} contact flow and sync a Connect test case against it. Only environments/dev sets this true today — the load-testing IAM role and EventBridge pipeline this depends on are dev-only."
+  type        = bool
+  default     = false
+}
+
+variable "connect_phone_number" {
+  description = "A phone number already claimed on this Connect instance, used as the SourcePhoneNumber (not DestinationPhoneNumber, which is omitted entirely) for the load-test sandbox's synthetic test case entry point. Required (non-empty) only when enable_load_test_sandbox is true — this is a real claimed number, not a placeholder; Connect uses it to resolve which flow a simulated contact enters."
+  type        = string
+  default     = ""
+}

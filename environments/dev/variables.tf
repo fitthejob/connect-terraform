@@ -10,6 +10,11 @@ variable "hours_of_operation_name" {
   type        = string
 }
 
+variable "connect_phone_number" {
+  description = "A phone number already claimed on the dev Connect instance, passed through to modules/connect for the load-test sandbox's synthetic test case entry point."
+  type        = string
+}
+
 variable "queue_claims_max_contacts" {
   description = "Max contacts for the claims queue"
   type        = number

@@ -1,0 +1,28 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "message",
+  "Actions": [
+    {
+      "Identifier": "message",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "This is the load test sandbox."
+      },
+      "Transitions": {
+        "NextAction": "disconnect",
+        "Errors": [
+          {
+            "NextAction": "disconnect",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "disconnect",
+      "Type": "DisconnectParticipant",
+      "Parameters": {},
+      "Transitions": {}
+    }
+  ]
+}
