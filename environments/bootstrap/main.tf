@@ -30,3 +30,19 @@ module "pr_checks_role" {
   lambda_artifacts_bucket = var.lambda_artifacts_bucket
   tfstate_bucket          = var.tfstate_bucket
 }
+
+module "load_test_role" {
+  source = "../../modules/iam"
+
+  role_name            = "github-simulate-load-test"
+  role_description     = "GitHub Actions load-test workflow - Connect test-case execution only, dev-only"
+  github_repo          = var.github_repo
+  github_repo_numeric  = var.github_repo_numeric
+  allowed_environments = ["load-test"]
+  allow_pull_requests  = false
+
+  permissions_profile     = "load_test"
+  environments            = ["dev"]
+  lambda_artifacts_bucket = var.lambda_artifacts_bucket
+  tfstate_bucket          = var.tfstate_bucket
+}
