@@ -1,0 +1,35 @@
+{
+  "Version": "2019-10-30",
+  "Metadata": {},
+  "Observations": [
+    {
+      "Identifier": "Start",
+      "Event": {
+        "Type": "TestInitiated",
+        "Actor": "System",
+        "Properties": {}
+      },
+      "Usage": {
+        "Type": "EXACTLY"
+      },
+      "Actions": [
+        {
+          "Identifier": "EndTest",
+          "Type": "TestControl",
+          "Parameters": {
+            "ActionType": "TestControl",
+            "Command": {
+              "Type": "EndTest"
+            }
+          },
+          "Transitions": {
+            "NextAction": ""
+          }
+        }
+      ],
+      "Transitions": {
+        "NextObservations": []
+      }
+    }
+  ]
+}
