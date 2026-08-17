@@ -692,12 +692,17 @@ data "aws_iam_policy_document" "load_test_permissions" {
   }
 }
 
+# Each data.aws_iam_policy_document above is gated by its own `count =
+# var.permissions_profile == "..." ? 1 : 0`, so exactly one of the three
+# has count = 1 for any given profile value. Terraform's ternary operator
+# only evaluates the taken branch, so the [0] index on an untaken branch's
+# count-0 document is never actually evaluated — same pattern the
+# pre-existing 2-way ternary already relied on before this local was added.
 locals {
-  load_test_policy_json = var.permissions_profile == "load_test" ? data.aws_iam_policy_document.load_test_permissions[0].json : null
   selected_policy_json = (
     var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json :
     var.permissions_profile == "pr_checks" ? data.aws_iam_policy_document.pr_checks_permissions[0].json :
-    local.load_test_policy_json
+    data.aws_iam_policy_document.load_test_permissions[0].json
   )
 }
 
