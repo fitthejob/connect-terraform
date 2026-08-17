@@ -14,19 +14,159 @@ locals {
   # per-rule resources (DLQ, alarm, rule itself). All four rules target the
   # same shared subscriber Lambda (var.subscriber_alias_arn) -- one
   # concern (event -> CloudWatch metric), not four separate functions.
+  #
+  # contact_initiated and contact_disconnected were removed here --
+  # Amazon Connect's native EventBridge Contact Events already provide
+  # this data (source: aws.connect) with zero custom Lambda code, and the
+  # custom versions carried no payload beyond contactId/channel/timestamp
+  # that the native event doesn't already have. See the new
+  # aws_cloudwatch_event_rule.native_contact_events resource below for
+  # the replacement. contact_transferred and verification_completed
+  # remain here because they carry resolved contact/flow attributes
+  # (Queue/Intent, VerificationStatus) that native events do not include.
   rules = {
-    contact_initiated = {
-      detail_type = "contact.initiated"
-    }
     contact_transferred = {
       detail_type = "contact.transferred"
-    }
-    contact_disconnected = {
-      detail_type = "contact.disconnected"
     }
     verification_completed = {
       detail_type = "verification.completed"
     }
+  }
+}
+
+# Native Amazon Connect Contact Events -- delivered automatically to the
+# account's DEFAULT EventBridge bus (no event_bus_name set below), not
+# this module's own custom contact-center-events-{env} bus. Replaces the
+# old contact.initiated/contact.disconnected custom events. Filtered to
+# INITIATED/DISCONNECTED only -- Connect emits several other native event
+# types (QUEUED, CONNECTED_TO_AGENT, COMPLETED, CONTACT_DATA_UPDATED,
+# etc.) not currently consumed by anything in this repo.
+#
+# detail-type value: AWS's own current documentation is inconsistent
+# between "Amazon Connect Contact Event" and "Connect Customer Contact
+# Event" across different doc pages -- confirm the real value against a
+# live event (see the eventbridge console's rule-testing tool, or
+# CloudWatch Logs on event-metric-subscriber after a real call) before
+# trusting this constant in a real apply. Update here if it differs.
+resource "aws_cloudwatch_event_rule" "native_contact_events" {
+  name = "contact-center-native-contact-events-${var.environment}"
+
+  event_pattern = jsonencode({
+    source      = ["aws.connect"]
+    detail-type = ["Amazon Connect Contact Event"]
+    detail = {
+      eventType = ["INITIATED", "DISCONNECTED"]
+    }
+  })
+}
+
+resource "aws_sqs_queue" "native_contact_events_durable" {
+  name                    = "contact-center-native-contact-events-durable-${var.environment}"
+  sqs_managed_sse_enabled = true
+}
+
+resource "aws_cloudwatch_event_target" "native_contact_events_sqs" {
+  rule      = aws_cloudwatch_event_rule.native_contact_events.name
+  target_id = "durable-sqs"
+  arn       = aws_sqs_queue.native_contact_events_durable.arn
+}
+
+resource "aws_sqs_queue_policy" "native_contact_events_durable" {
+  queue_url = aws_sqs_queue.native_contact_events_durable.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.native_contact_events_durable.arn
+        Condition = {
+          ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.native_contact_events.arn }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_sqs_queue" "native_contact_events_lambda_target_dlq" {
+  name                    = "contact-center-native-contact-events-dlq-${var.environment}"
+  sqs_managed_sse_enabled = true
+}
+
+resource "aws_sqs_queue_policy" "native_contact_events_lambda_target_dlq" {
+  queue_url = aws_sqs_queue.native_contact_events_lambda_target_dlq.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "events.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.native_contact_events_lambda_target_dlq.arn
+        Condition = {
+          ArnEquals = { "aws:SourceArn" = aws_cloudwatch_event_rule.native_contact_events.arn }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_cloudwatch_event_target" "native_contact_events_lambda" {
+  rule      = aws_cloudwatch_event_rule.native_contact_events.name
+  target_id = "lambda-subscriber"
+  arn       = var.subscriber_alias_arn
+
+  dead_letter_config {
+    arn = aws_sqs_queue.native_contact_events_lambda_target_dlq.arn
+  }
+
+  retry_policy {
+    maximum_retry_attempts       = 3
+    maximum_event_age_in_seconds = 300
+  }
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_native_contact_events" {
+  statement_id  = "AllowEventBridge-native-contact-events"
+  action        = "lambda:InvokeFunction"
+  function_name = var.subscriber_function_name
+  qualifier     = "live"
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.native_contact_events.arn
+}
+
+resource "aws_cloudwatch_metric_alarm" "native_contact_events_durable_dlq_depth" {
+  alarm_name          = "contact-center-native-contact-events-durable-dlq-depth-${var.environment}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 300
+  statistic           = "Maximum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    QueueName = aws_sqs_queue.native_contact_events_durable.name
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "native_contact_events_lambda_dlq_depth" {
+  alarm_name          = "contact-center-native-contact-events-lambda-dlq-depth-${var.environment}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 300
+  statistic           = "Maximum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    QueueName = aws_sqs_queue.native_contact_events_lambda_target_dlq.name
   }
 }
 
