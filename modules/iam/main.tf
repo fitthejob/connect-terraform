@@ -137,6 +137,8 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:AssociateLambdaFunction",
       "connect:DisassociateLambdaFunction",
       "connect:ListLambdaFunctions",
+      "connect:CreateTestCase",
+      "connect:UpdateTestCase",
     ]
     # Could be scoped to the specific Connect instance ARN
     # (arn:aws:connect:region:account:instance/instance-id), but modules/iam
