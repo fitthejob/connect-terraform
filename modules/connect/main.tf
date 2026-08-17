@@ -134,6 +134,13 @@ resource "aws_connect_contact_flow" "load_test_sandbox" {
   description = "Entry point for synthetic load-test contacts injected via the Connect test-simulation API. Content swapped out-of-band -- Terraform only owns existence + a safe stub."
   type        = "CONTACT_FLOW"
   content     = file("${path.module}/contact_flows/load_test_sandbox.json")
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_load_test_sandbox || length(var.connect_phone_number) > 0
+      error_message = "connect_phone_number must be set when enable_load_test_sandbox is true -- CreateTestCase will otherwise fail at apply time with a misleading AWS error (\"Must specify either FlowId or phone numbers\")."
+    }
+  }
 }
 
 # Syncs the load-test smoke-test test case (modules/connect/test_cases/smoke-test.json,
