@@ -144,19 +144,32 @@ resource "aws_connect_contact_flow" "load_test_sandbox" {
 # `apply`, never on `plan` -- avoids the known problem this repo already has
 # with data "external" mutating live state on every plan (see CLAUDE.md's
 # 2026-08-08 TODO on modules/lex's bot-alias script). This is a NEW pattern
-# for this repo -- flag it explicitly before every `apply` that touches it,
-# per CLAUDE.md rule #6, since it runs AWS-mutating commands on the human's
-# own machine.
+# for this repo -- it runs AWS-mutating commands in TWO different execution
+# contexts, not just one:
+#   1. A human's local `terraform apply` -- CLAUDE.md rule #6 applies here as
+#      normal (only the human's own AWS credentials run apply; flag AWS
+#      mutations explicitly before running).
+#   2. deploy-dev.yml's unattended `terraform apply -auto-approve` against
+#      environments/dev on every push to main (environments/dev/terraform.tfvars
+#      is committed and auto-loaded, so this fires with no human in the loop).
+#      There is no "flag before apply" step in CI -- what makes this safe here
+#      is sync_test_case.sh's own idempotency (list-then-create-or-update, see
+#      its ListTestCases/CreateTestCase/UpdateTestCase branching) and the
+#      github-connect-deploy-dev role having exactly the Connect test-case
+#      permissions this script needs, nothing broader. See CLAUDE.md's Known
+#      gotchas for the 2026-08-17 entry documenting this.
 #
-# Trigger is the content file's hash ONLY, deliberately not also keyed on
-# load_test_sandbox's contact_flow_id -- that ID is stable across normal
-# applies, and coupling it in would cause spurious re-syncs whenever
-# unrelated attributes on that resource happen to get recalculated.
+# Trigger covers the content hash AND the two other values the script's API
+# call actually depends on (entry-point flow ID, destination phone number) --
+# see the entry_point_ids trigger below. Content hash alone would miss a
+# change to either of those, letting the live test case silently desync from
+# Terraform's believed state while `terraform plan` still reports 0 changes.
 resource "null_resource" "sync_test_case" {
   count = var.enable_load_test_sandbox ? 1 : 0
 
   triggers = {
-    content_hash = filesha1("${path.module}/test_cases/smoke-test.json")
+    content_hash    = filesha1("${path.module}/test_cases/smoke-test.json")
+    entry_point_ids = "${aws_connect_contact_flow.load_test_sandbox[0].contact_flow_id}|${var.connect_phone_number}"
   }
 
   provisioner "local-exec" {
