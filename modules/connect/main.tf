@@ -119,6 +119,23 @@ resource "aws_connect_contact_flow" "validation_sandbox" {
   content     = file("${path.module}/contact_flows/validation_sandbox.json")
 }
 
+# Dedicated entry point for the load-test test case (see
+# modules/connect/scripts/sync_test_case.sh and test_cases/smoke-test.json).
+# Deliberately NOT Validation-Sandbox-{env} above -- that flow's content is
+# routinely overwritten by deploy-dev.yml's propose-main-inbound-flow-update
+# job and by manual module testing (see CLAUDE.md's 2026-08-08 TODO on
+# Validation-Sandbox contention). This flow's content is swapped out-of-band,
+# manually, whenever you want to load-test a specific flow shape -- Terraform
+# only owns its existence and a safe stub, same pattern as validation_sandbox.
+resource "aws_connect_contact_flow" "load_test_sandbox" {
+  count       = var.enable_load_test_sandbox ? 1 : 0
+  instance_id = data.aws_connect_instance.main.id
+  name        = "Load-Test-Sandbox-${var.environment}"
+  description = "Entry point for synthetic load-test contacts injected via the Connect test-simulation API. Content swapped out-of-band -- Terraform only owns existence + a safe stub."
+  type        = "CONTACT_FLOW"
+  content     = file("${path.module}/contact_flows/load_test_sandbox.json")
+}
+
 # Phase 4: shared agent whisper flow, branches on contact attributes set
 # earlier in Main-Inbound (Queue, CustomerStatus, CustomerTier,
 # VerificationStatus) rather than one whisper flow per queue -- see

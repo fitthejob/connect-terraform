@@ -63,6 +63,11 @@ output "validation_sandbox_contact_flow_id" {
   value       = aws_connect_contact_flow.validation_sandbox.contact_flow_id
 }
 
+output "load_test_sandbox_contact_flow_id" {
+  description = "Contact flow ID of the load-test sandbox entry point (empty if enable_load_test_sandbox is false)"
+  value       = var.enable_load_test_sandbox ? aws_connect_contact_flow.load_test_sandbox[0].contact_flow_id : ""
+}
+
 output "agent_whisper_flow_id" {
   description = "Contact flow ID of the shared Agent Whisper flow"
   value       = aws_connect_contact_flow.agent_whisper.contact_flow_id
