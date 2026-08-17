@@ -30,13 +30,20 @@ DESTINATION_PHONE_NUMBER="${DESTINATION_PHONE_NUMBER:?DESTINATION_PHONE_NUMBER e
 
 echo "sync_test_case: INSTANCE_ID='$INSTANCE_ID' ENTRY_POINT_FLOW_ID='$ENTRY_POINT_FLOW_ID' TEST_CASE_NAME='$TEST_CASE_NAME' CONTENT_PATH='$CONTENT_PATH'" >&2
 
-# -c (compact output) is required here, not cosmetic: aws-cli's argument
-# parser can fail to populate nested fields from a pretty-printed
-# (multi-line) JSON string passed via shell variable substitution --
-# confirmed live, CreateTestCase returned "Must specify either FlowId or
-# phone numbers" despite FlowId genuinely being present in the pretty-printed
-# JSON. Compact single-line JSON avoids the ambiguity entirely.
-ENTRY_POINT_JSON=$(jq -nc \
+# Passed via file://, not as an inline JSON string argument: confirmed live
+# against real AWS that aws-cli's argument parser fails to populate nested
+# --entry-point fields from a JSON string passed via shell variable
+# substitution (both pretty-printed and jq -c compact forms reproduced the
+# same "Must specify either FlowId or phone numbers" rejection, even though
+# the instance, phone number, and flow ID were all independently confirmed
+# valid). file:// is the same mechanism --content already uses successfully
+# on the line below -- routing through a real file sidesteps whatever
+# quoting/escaping is mangling the inline-argument path.
+ENTRY_POINT_FILE=$(mktemp)
+INITIALIZATION_DATA_FILE=$(mktemp)
+trap 'rm -f "$ENTRY_POINT_FILE" "$INITIALIZATION_DATA_FILE"' EXIT
+
+jq -n \
   --arg source "$SOURCE_PHONE_NUMBER" \
   --arg dest "$DESTINATION_PHONE_NUMBER" \
   --arg flow_id "$ENTRY_POINT_FLOW_ID" \
@@ -47,9 +54,9 @@ ENTRY_POINT_JSON=$(jq -nc \
       DestinationPhoneNumber: $dest,
       FlowId: $flow_id
     }
-  }')
+  }' > "$ENTRY_POINT_FILE"
 
-INITIALIZATION_DATA_JSON=$(jq -nc '{Attributes: {isSyntheticTest: "true"}}')
+jq -n '{Attributes: {isSyntheticTest: "true"}}' > "$INITIALIZATION_DATA_FILE"
 
 EXISTING_TEST_CASE_ID=""
 NEXT_TOKEN=""
@@ -80,8 +87,8 @@ if [ -n "$EXISTING_TEST_CASE_ID" ]; then
     --test-case-id "$EXISTING_TEST_CASE_ID" \
     --name "$TEST_CASE_NAME" \
     --content "file://${CONTENT_PATH}" \
-    --entry-point "$ENTRY_POINT_JSON" \
-    --initialization-data "$INITIALIZATION_DATA_JSON" \
+    --entry-point "file://${ENTRY_POINT_FILE}" \
+    --initialization-data "file://${INITIALIZATION_DATA_FILE}" \
     --status PUBLISHED \
     >/dev/null
   echo "sync_test_case: updated test case $EXISTING_TEST_CASE_ID" >&2
@@ -90,8 +97,8 @@ else
     --instance-id "$INSTANCE_ID" \
     --name "$TEST_CASE_NAME" \
     --content "file://${CONTENT_PATH}" \
-    --entry-point "$ENTRY_POINT_JSON" \
-    --initialization-data "$INITIALIZATION_DATA_JSON" \
+    --entry-point "file://${ENTRY_POINT_FILE}" \
+    --initialization-data "file://${INITIALIZATION_DATA_FILE}" \
     --status PUBLISHED)
   NEW_TEST_CASE_ID=$(echo "$CREATE_OUTPUT" | jq -r '.TestCaseId')
   echo "sync_test_case: created test case $NEW_TEST_CASE_ID" >&2
