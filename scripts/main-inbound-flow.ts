@@ -90,14 +90,11 @@ const enableLogging = new UpdateFlowLoggingBehaviorActionBuilder(
   "EnableLogging",
 )
   .enabled()
-  .next("PublishInitiated")
+  // Was .next("PublishInitiated") -- PublishInitiated removed, Connect's
+  // native INITIATED Contact Event now covers this (see
+  // modules/eventbridge-pipeline/main.tf's native_contact_events rule).
+  .next("InvokeCustomerLookup")
   .build();
-
-const publishInitiated = publishEvent(
-  "PublishInitiated",
-  "contact.initiated",
-  "InvokeCustomerLookup",
-);
 
 const publishPostVerification = publishEvent(
   "PublishPostVerification",
@@ -395,30 +392,16 @@ const checkQueueForTransfer = new CompareActionBuilder("CheckQueueForTransfer")
 
 const disconnect = new DisconnectParticipantActionBuilder("Disconnect").build();
 
-// contact.disconnected fires right before the flow's own terminal
-// Disconnect action -- DurationSeconds isn't available as a flow system
-// attribute this phase (would need a SetContactAttribute at call start
-// capturing a timestamp and computing elapsed time, out of scope here) so
-// it's omitted; contact-event-publisher/index.ts already treats it as
-// optional (only present when EventType is contact.disconnected AND
-// DurationSeconds is explicitly passed).
-const publishDisconnected = publishEvent(
-  "PublishDisconnected",
-  "contact.disconnected",
-  "Disconnect",
-);
-
 const invokeCallbackOffer = new InvokeFlowModuleActionBuilder(
   "InvokeCallbackOffer",
 )
   .flowModuleId(CALLBACK_OFFER_MODULE_ID)
-  .next("PublishDisconnected")
-  .onError("PublishDisconnected")
+  .next("Disconnect")
+  .onError("Disconnect")
   .build();
 
 const flow = new FlowBuilder("MainInbound")
   .startWith(enableLogging)
-  .add(publishInitiated)
   .add(invokeCustomerLookup)
   .add(greeting)
   .add(retryLoop)
@@ -463,7 +446,6 @@ const flow = new FlowBuilder("MainInbound")
   .add(transferGeneral)
   .add(setCallbackQueueGeneral)
   .add(invokeCallbackOffer)
-  .add(publishDisconnected)
   .add(disconnect)
   .build();
 
