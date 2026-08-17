@@ -176,7 +176,11 @@ resource "null_resource" "sync_test_case" {
     command = "${path.module}/scripts/sync_test_case.sh '${data.aws_connect_instance.main.id}' '${aws_connect_contact_flow.load_test_sandbox[0].contact_flow_id}' 'smoke-test' '${path.module}/test_cases/smoke-test.json'"
 
     environment = {
-      DESTINATION_PHONE_NUMBER = var.connect_phone_number
+      # Maps to VoiceCallEntryPointParameters.SourcePhoneNumber inside the
+      # script, not DestinationPhoneNumber -- see sync_test_case.sh's own
+      # comment for the live-verified reasoning. Named for what the value
+      # IS (the real claimed number), not which API field it lands in.
+      CLAIMED_PHONE_NUMBER = var.connect_phone_number
     }
   }
 

@@ -16,41 +16,43 @@ ENTRY_POINT_FLOW_ID="$2"
 TEST_CASE_NAME="$3"
 CONTENT_PATH="$4"
 
-# Simulated caller ANI -- metadata only, never dialed, safe as a fixed
-# marker value in the reserved 555 exchange (never a real assignable
-# number). DestinationPhoneNumber, by contrast, MUST be a real number
-# already claimed on the instance -- Connect uses it to resolve which
-# flow the simulated contact enters. It is passed in as part of
-# ENTRY_POINT_FLOW_ID's caller context via the DESTINATION_PHONE_NUMBER
-# env var (set by the null_resource's `environment` block), not a
-# positional arg, since it's a coordinate value not specific to this
-# script's create/update logic.
-SOURCE_PHONE_NUMBER="+15550100000"
-DESTINATION_PHONE_NUMBER="${DESTINATION_PHONE_NUMBER:?DESTINATION_PHONE_NUMBER env var must be set}"
+# Maps to VoiceCallEntryPointParameters.SourcePhoneNumber, NOT
+# DestinationPhoneNumber -- confirmed live 2026-08-17 by exporting a
+# working test case built through the Connect console UI: its EntryPoint
+# has the claimed number in SourcePhoneNumber and DestinationPhoneNumber
+# set to null. This is the OPPOSITE of what every AWS doc example shows
+# (DestinationPhoneNumber as the claimed number, SourcePhoneNumber as a
+# fake caller ID) -- those examples do not reflect live API/console
+# behavior. DestinationPhoneNumber is confirmed optional (the console
+# UI's own field label: "The incoming phone number is optional") and is
+# omitted entirely here. Passing the claimed number as
+# DestinationPhoneNumber instead (as originally written, following the
+# AWS docs) reproducibly fails CreateTestCase/UpdateTestCase with
+# Status: PUBLISHED -- "InvalidRequestException: Must specify either
+# FlowId or phone numbers" -- regardless of FlowId format, target flow,
+# or JSON encoding; this was extensively isolated via CloudTrail wire
+# tracing before the console-export comparison revealed the actual field
+# mapping. Env var name kept as CLAIMED_PHONE_NUMBER (not tied to either
+# API field name) so this mapping can be corrected again without a
+# misleading variable name.
+CLAIMED_PHONE_NUMBER="${CLAIMED_PHONE_NUMBER:?CLAIMED_PHONE_NUMBER env var must be set}"
 
 echo "sync_test_case: INSTANCE_ID='$INSTANCE_ID' ENTRY_POINT_FLOW_ID='$ENTRY_POINT_FLOW_ID' TEST_CASE_NAME='$TEST_CASE_NAME' CONTENT_PATH='$CONTENT_PATH'" >&2
 
 # Passed via file:// rather than an inline JSON string argument, matching
-# --content's existing mechanism below. Not required for correctness (the
-# real "Must specify either FlowId or phone numbers" root cause, confirmed
-# live via --debug wire tracing, was CreateTestCase rejecting a target flow
-# whose only action was DisconnectParticipant -- see load_test_sandbox.json's
-# stub content, fixed to include a MessageParticipant action first) -- kept
-# as a harmless, arguably more robust way to hand AWS CLI a JSON payload
-# without depending on shell quoting behavior.
+# --content's existing mechanism below -- harmless, avoids any shell
+# quoting/escaping edge cases.
 ENTRY_POINT_FILE=$(mktemp)
 INITIALIZATION_DATA_FILE=$(mktemp)
 trap 'rm -f "$ENTRY_POINT_FILE" "$INITIALIZATION_DATA_FILE"' EXIT
 
 jq -n \
-  --arg source "$SOURCE_PHONE_NUMBER" \
-  --arg dest "$DESTINATION_PHONE_NUMBER" \
+  --arg source "$CLAIMED_PHONE_NUMBER" \
   --arg flow_id "$ENTRY_POINT_FLOW_ID" \
   '{
     Type: "VOICE_CALL",
     VoiceCallEntryPointParameters: {
       SourcePhoneNumber: $source,
-      DestinationPhoneNumber: $dest,
       FlowId: $flow_id
     }
   }' > "$ENTRY_POINT_FILE"
