@@ -30,7 +30,13 @@ DESTINATION_PHONE_NUMBER="${DESTINATION_PHONE_NUMBER:?DESTINATION_PHONE_NUMBER e
 
 echo "sync_test_case: INSTANCE_ID='$INSTANCE_ID' ENTRY_POINT_FLOW_ID='$ENTRY_POINT_FLOW_ID' TEST_CASE_NAME='$TEST_CASE_NAME' CONTENT_PATH='$CONTENT_PATH'" >&2
 
-ENTRY_POINT_JSON=$(jq -n \
+# -c (compact output) is required here, not cosmetic: aws-cli's argument
+# parser can fail to populate nested fields from a pretty-printed
+# (multi-line) JSON string passed via shell variable substitution --
+# confirmed live, CreateTestCase returned "Must specify either FlowId or
+# phone numbers" despite FlowId genuinely being present in the pretty-printed
+# JSON. Compact single-line JSON avoids the ambiguity entirely.
+ENTRY_POINT_JSON=$(jq -nc \
   --arg source "$SOURCE_PHONE_NUMBER" \
   --arg dest "$DESTINATION_PHONE_NUMBER" \
   --arg flow_id "$ENTRY_POINT_FLOW_ID" \
@@ -43,7 +49,7 @@ ENTRY_POINT_JSON=$(jq -n \
     }
   }')
 
-INITIALIZATION_DATA_JSON=$(jq -n '{Attributes: {isSyntheticTest: "true"}}')
+INITIALIZATION_DATA_JSON=$(jq -nc '{Attributes: {isSyntheticTest: "true"}}')
 
 EXISTING_TEST_CASE_ID=""
 NEXT_TOKEN=""
