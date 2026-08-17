@@ -646,6 +646,25 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
     resources = ["*"]
   }
 
+  # See EventBridgeSchedulerManage in deploy_permissions above -- pr-checks'
+  # terraform plan needs to read (not manage) the abandonment-metric
+  # schedule's state, confirmed live via AccessDeniedException on
+  # scheduler:GetSchedule. Same exact schedule ARN pattern, read-only subset
+  # of actions.
+  statement {
+    sid    = "EventBridgeSchedulerReadOnly"
+    effect = "Allow"
+    actions = [
+      "scheduler:GetSchedule",
+      "scheduler:ListTagsForResource",
+    ]
+    resources = flatten([
+      for env in var.environments : [
+        "arn:aws:scheduler:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:schedule/default/abandonment-metric-poll-${env}",
+      ]
+    ])
+  }
+
   statement {
     sid    = "StateBucketAccess"
     effect = "Allow"
