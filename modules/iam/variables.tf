@@ -38,12 +38,12 @@ variable "allow_pull_requests" {
 }
 
 variable "permissions_profile" {
-  description = "Which permissions profile to attach: \"deploy\" (full read/write for CI deploys) or \"pr_checks\" (read-only, for PR validation)"
+  description = "Which permissions profile to attach: \"deploy\" (full read/write for CI deploys), \"pr_checks\" (read-only, for PR validation), or \"load_test\" (Connect test-case execution only, for the load-simulation workflow)"
   type        = string
 
   validation {
-    condition     = contains(["deploy", "pr_checks"], var.permissions_profile)
-    error_message = "permissions_profile must be \"deploy\" or \"pr_checks\"."
+    condition     = contains(["deploy", "pr_checks", "load_test"], var.permissions_profile)
+    error_message = "permissions_profile must be \"deploy\", \"pr_checks\", or \"load_test\"."
   }
 }
 
