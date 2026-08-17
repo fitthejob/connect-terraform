@@ -14,11 +14,16 @@ import { dirname, resolve } from "node:path";
 const testInitiated = new TestInitiatedEventBuilder().build();
 const endTest = new EndTestActionBuilder("EndTest").build();
 
+// No Usage key -- confirmed live against the real CreateTestCase API
+// (Status: PUBLISHED, which triggers content validation) that a
+// TestInitiated-driven observation must omit Usage entirely; both
+// "EXACTLY" and "ANY" are rejected with InvalidObservationProblem
+// ("Invalid usage type") when present. See @fitthejob/connect-flow-builder
+// v0.3.1's fix for the same finding upstream.
 const builtTestCase = new TestCaseBuilder()
   .add({
     Identifier: "Start",
     Event: testInitiated,
-    Usage: { Type: "EXACTLY" },
     Actions: [endTest],
     Transitions: { NextObservations: [] },
   })

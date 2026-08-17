@@ -9,9 +9,6 @@
         "Actor": "System",
         "Properties": {}
       },
-      "Usage": {
-        "Type": "EXACTLY"
-      },
       "Actions": [
         {
           "Identifier": "EndTest",
@@ -21,9 +18,6 @@
             "Command": {
               "Type": "EndTest"
             }
-          },
-          "Transitions": {
-            "NextAction": ""
           }
         }
       ],
