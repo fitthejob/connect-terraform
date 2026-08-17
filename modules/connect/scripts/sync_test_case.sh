@@ -30,15 +30,14 @@ DESTINATION_PHONE_NUMBER="${DESTINATION_PHONE_NUMBER:?DESTINATION_PHONE_NUMBER e
 
 echo "sync_test_case: INSTANCE_ID='$INSTANCE_ID' ENTRY_POINT_FLOW_ID='$ENTRY_POINT_FLOW_ID' TEST_CASE_NAME='$TEST_CASE_NAME' CONTENT_PATH='$CONTENT_PATH'" >&2
 
-# Passed via file://, not as an inline JSON string argument: confirmed live
-# against real AWS that aws-cli's argument parser fails to populate nested
-# --entry-point fields from a JSON string passed via shell variable
-# substitution (both pretty-printed and jq -c compact forms reproduced the
-# same "Must specify either FlowId or phone numbers" rejection, even though
-# the instance, phone number, and flow ID were all independently confirmed
-# valid). file:// is the same mechanism --content already uses successfully
-# on the line below -- routing through a real file sidesteps whatever
-# quoting/escaping is mangling the inline-argument path.
+# Passed via file:// rather than an inline JSON string argument, matching
+# --content's existing mechanism below. Not required for correctness (the
+# real "Must specify either FlowId or phone numbers" root cause, confirmed
+# live via --debug wire tracing, was CreateTestCase rejecting a target flow
+# whose only action was DisconnectParticipant -- see load_test_sandbox.json's
+# stub content, fixed to include a MessageParticipant action first) -- kept
+# as a harmless, arguably more robust way to hand AWS CLI a JSON payload
+# without depending on shell quoting behavior.
 ENTRY_POINT_FILE=$(mktemp)
 INITIALIZATION_DATA_FILE=$(mktemp)
 trap 'rm -f "$ENTRY_POINT_FILE" "$INITIALIZATION_DATA_FILE"' EXIT
