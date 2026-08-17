@@ -40,7 +40,9 @@ Amazon Connect instance (pre-existing, looked up by alias)
   │       Profiles-backed eligibility check
   │
   ├─ contact-event-publisher Lambda — EventBridge lifecycle events
-  │   (contact.initiated/transferred/disconnected)
+  │   (contact.transferred). contact.initiated/contact.disconnected now
+  │   come from Amazon Connect's native EventBridge Contact Events
+  │   instead of this custom publisher.
   │
   └─ queues: claims, benefits, authorizations, billing, general
       + one routing profile

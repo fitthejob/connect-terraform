@@ -10,15 +10,15 @@ import type {
 
 const eventBridge = new EventBridgeClient({ region: process.env.AWS_REGION });
 
-// Only the flow-level lifecycle events -- customer.lookup.completed and
-// verification.* are published inline by customer-lookup and
+// Only contact.transferred remains here -- contact.initiated and
+// contact.disconnected were removed in favor of Amazon Connect's native
+// EventBridge Contact Events (see modules/eventbridge-pipeline/main.tf's
+// native_contact_events rule), which carry this data automatically with
+// no flow-invoked Lambda call needed. customer.lookup.completed and
+// verification.* remain published inline by customer-lookup and
 // sms-verification respectively, not through this generic publisher.
-type FlowEventType = "contact.initiated" | "contact.transferred" | "contact.disconnected";
-const FLOW_EVENT_TYPES: readonly FlowEventType[] = [
-  "contact.initiated",
-  "contact.transferred",
-  "contact.disconnected",
-];
+type FlowEventType = "contact.transferred";
+const FLOW_EVENT_TYPES: readonly FlowEventType[] = ["contact.transferred"];
 
 interface ConnectEvent {
   Details: {
@@ -32,7 +32,6 @@ interface ConnectEvent {
       Queue?: string;
       Intent?: string;
       VerificationStatus?: string;
-      DurationSeconds?: string;
     };
   };
 }
@@ -51,11 +50,6 @@ export const handler = async (event: ConnectEvent): Promise<ConnectLambdaRespons
     return { published: "false" };
   }
 
-  const durationSeconds =
-    params.EventType === "contact.disconnected" && params.DurationSeconds
-      ? Number(params.DurationSeconds)
-      : undefined;
-
   const detail: ContactCenterEvent["detail"] = {
     contactId,
     channel,
@@ -64,7 +58,6 @@ export const handler = async (event: ConnectEvent): Promise<ConnectLambdaRespons
     ...(params.Queue ? { queue: params.Queue } : {}),
     ...(params.Intent ? { intent: params.Intent } : {}),
     ...(params.VerificationStatus ? { verificationStatus: params.VerificationStatus } : {}),
-    ...(durationSeconds !== undefined && !Number.isNaN(durationSeconds) ? { durationSeconds } : {}),
   };
 
   try {
