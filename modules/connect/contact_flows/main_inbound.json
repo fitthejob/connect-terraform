@@ -346,7 +346,7 @@
       "Identifier": "InvokeCustomerLookup",
       "Type": "InvokeFlowModule",
       "Parameters": {
-        "FlowModuleId": "77777777-7777-7777-7777-777777777777"
+        "FlowModuleId": "fa99a32c-2b92-4f89-a396-c803daf005b4"
       },
       "Transitions": {
         "NextAction": "Greeting",
@@ -410,7 +410,7 @@
       "Parameters": {
         "Text": "For claims, press or say 1. For benefits, press or say 2. For authorizations, press or say 3. For billing, press or say 4.",
         "LexV2Bot": {
-          "AliasArn": "arn:aws:lex:us-east-1:123456789012:bot-alias/BOTID/ALIASID"
+          "AliasArn": "arn:aws:lex:us-east-1:084396578198:bot-alias/AOEWLIZGX8/H5SJSUACSG"
         },
         "LexSessionAttributes": {
           "x-amz-lex:allow-audio-input:*:*": "true",
@@ -588,7 +588,7 @@
       "Identifier": "InvokeSmsVerification",
       "Type": "InvokeFlowModule",
       "Parameters": {
-        "FlowModuleId": "88888888-8888-8888-8888-888888888888"
+        "FlowModuleId": "7f2703b2-42db-4265-b56c-149ee0697f41"
       },
       "Transitions": {
         "NextAction": "PublishPostVerification",
@@ -605,7 +605,7 @@
       "Type": "InvokeLambdaFunction",
       "Parameters": {
         "InvocationTimeLimitSeconds": "8",
-        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:123456789012:function:contact-event-publisher-dev",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:contact-event-publisher-dev:live",
         "LambdaInvocationAttributes": {
           "EventType": "verification.completed",
           "VerificationStatus": "$.Attributes.VerificationStatus"
@@ -626,7 +626,7 @@
       "Type": "InvokeLambdaFunction",
       "Parameters": {
         "InvocationTimeLimitSeconds": "8",
-        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:123456789012:function:routing-decision-dev",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:routing-decision-dev:live",
         "LambdaInvocationAttributes": {
           "Intent": "$.Attributes.Intent",
           "CustomerStatus": "$.Attributes.CustomerStatus",
@@ -676,7 +676,7 @@
             "Condition": {
               "Operator": "Equals",
               "Operands": [
-                "arn:aws:connect:us-east-1:123456789012:instance/aaaa/queue/11111111-1111-1111-1111-111111111111"
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
               ]
             }
           },
@@ -685,7 +685,7 @@
             "Condition": {
               "Operator": "Equals",
               "Operands": [
-                "arn:aws:connect:us-east-1:123456789012:instance/aaaa/queue/22222222-2222-2222-2222-222222222222"
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/26a7cd43-093a-4a28-aef6-18b2ee9fd943"
               ]
             }
           },
@@ -694,7 +694,7 @@
             "Condition": {
               "Operator": "Equals",
               "Operands": [
-                "arn:aws:connect:us-east-1:123456789012:instance/aaaa/queue/33333333-3333-3333-3333-333333333333"
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
               ]
             }
           },
@@ -703,7 +703,7 @@
             "Condition": {
               "Operator": "Equals",
               "Operands": [
-                "arn:aws:connect:us-east-1:123456789012:instance/aaaa/queue/44444444-4444-4444-4444-444444444444"
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/ef33ec80-8e64-433b-a099-97fb236d8fdc"
               ]
             }
           },
@@ -712,7 +712,7 @@
             "Condition": {
               "Operator": "Equals",
               "Operands": [
-                "arn:aws:connect:us-east-1:123456789012:instance/aaaa/queue/55555555-5555-5555-5555-555555555555"
+                "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/queue/9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
               ]
             }
           }
@@ -825,7 +825,7 @@
       "Type": "InvokeLambdaFunction",
       "Parameters": {
         "InvocationTimeLimitSeconds": "8",
-        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:123456789012:function:contact-event-publisher-dev",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:084396578198:function:contact-event-publisher-dev:live",
         "LambdaInvocationAttributes": {
           "EventType": "contact.transferred",
           "Queue": "$.Attributes.Queue",
@@ -925,7 +925,7 @@
       "Identifier": "SetQueueClaims",
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
-        "QueueId": "11111111-1111-1111-1111-111111111111"
+        "QueueId": "abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
       },
       "Transitions": {
         "NextAction": "TransferClaimsSetWhisper",
@@ -942,7 +942,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "arn:aws:connect:us-east-1:123456789012:instance/aaaa/contact-flow/99999999-9999-9999-9999-999999999999"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -979,7 +979,7 @@
       "Parameters": {
         "TargetContact": "Current",
         "Attributes": {
-          "CallbackQueueId": "11111111-1111-1111-1111-111111111111"
+          "CallbackQueueId": "abc2940c-2a9f-47e9-9caa-6685f2a7bf63"
         }
       },
       "Transitions": {
@@ -996,7 +996,7 @@
       "Identifier": "SetQueueBenefits",
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
-        "QueueId": "22222222-2222-2222-2222-222222222222"
+        "QueueId": "26a7cd43-093a-4a28-aef6-18b2ee9fd943"
       },
       "Transitions": {
         "NextAction": "TransferBenefitsSetWhisper",
@@ -1013,7 +1013,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "arn:aws:connect:us-east-1:123456789012:instance/aaaa/contact-flow/99999999-9999-9999-9999-999999999999"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1050,7 +1050,7 @@
       "Parameters": {
         "TargetContact": "Current",
         "Attributes": {
-          "CallbackQueueId": "22222222-2222-2222-2222-222222222222"
+          "CallbackQueueId": "26a7cd43-093a-4a28-aef6-18b2ee9fd943"
         }
       },
       "Transitions": {
@@ -1067,7 +1067,7 @@
       "Identifier": "SetQueueAuthorizations",
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
-        "QueueId": "33333333-3333-3333-3333-333333333333"
+        "QueueId": "81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
       },
       "Transitions": {
         "NextAction": "TransferAuthorizationsSetWhisper",
@@ -1084,7 +1084,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "arn:aws:connect:us-east-1:123456789012:instance/aaaa/contact-flow/99999999-9999-9999-9999-999999999999"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1121,7 +1121,7 @@
       "Parameters": {
         "TargetContact": "Current",
         "Attributes": {
-          "CallbackQueueId": "33333333-3333-3333-3333-333333333333"
+          "CallbackQueueId": "81ae8c6a-d6d6-45b7-bbd2-f720ad329e6d"
         }
       },
       "Transitions": {
@@ -1138,7 +1138,7 @@
       "Identifier": "SetQueueBilling",
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
-        "QueueId": "44444444-4444-4444-4444-444444444444"
+        "QueueId": "ef33ec80-8e64-433b-a099-97fb236d8fdc"
       },
       "Transitions": {
         "NextAction": "TransferBillingSetWhisper",
@@ -1155,7 +1155,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "arn:aws:connect:us-east-1:123456789012:instance/aaaa/contact-flow/99999999-9999-9999-9999-999999999999"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1192,7 +1192,7 @@
       "Parameters": {
         "TargetContact": "Current",
         "Attributes": {
-          "CallbackQueueId": "44444444-4444-4444-4444-444444444444"
+          "CallbackQueueId": "ef33ec80-8e64-433b-a099-97fb236d8fdc"
         }
       },
       "Transitions": {
@@ -1209,7 +1209,7 @@
       "Identifier": "SetQueueGeneral",
       "Type": "UpdateContactTargetQueue",
       "Parameters": {
-        "QueueId": "55555555-5555-5555-5555-555555555555"
+        "QueueId": "9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
       },
       "Transitions": {
         "NextAction": "TransferGeneralSetWhisper",
@@ -1226,7 +1226,7 @@
       "Type": "UpdateContactEventHooks",
       "Parameters": {
         "EventHooks": {
-          "AgentWhisper": "arn:aws:connect:us-east-1:123456789012:instance/aaaa/contact-flow/99999999-9999-9999-9999-999999999999"
+          "AgentWhisper": "arn:aws:connect:us-east-1:084396578198:instance/b1e76e5b-4f72-4e23-b6d1-281f53b3daeb/contact-flow/71e238df-a57a-45e1-9129-458095c00713"
         }
       },
       "Transitions": {
@@ -1263,7 +1263,7 @@
       "Parameters": {
         "TargetContact": "Current",
         "Attributes": {
-          "CallbackQueueId": "55555555-5555-5555-5555-555555555555"
+          "CallbackQueueId": "9d830e4d-ddd4-452e-ab8a-98b939fe50d0"
         }
       },
       "Transitions": {
@@ -1280,7 +1280,7 @@
       "Identifier": "InvokeCallbackOffer",
       "Type": "InvokeFlowModule",
       "Parameters": {
-        "FlowModuleId": "66666666-6666-6666-6666-666666666666"
+        "FlowModuleId": "82faf241-b6dc-4e68-bd4f-39dbd578f75a"
       },
       "Transitions": {
         "NextAction": "Disconnect",
