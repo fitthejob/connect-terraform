@@ -137,6 +137,8 @@ data "aws_iam_policy_document" "deploy_permissions" {
       "connect:AssociateLambdaFunction",
       "connect:DisassociateLambdaFunction",
       "connect:ListLambdaFunctions",
+      "connect:CreateTestCase",
+      "connect:UpdateTestCase",
     ]
     # Could be scoped to the specific Connect instance ARN
     # (arn:aws:connect:region:account:instance/instance-id), but modules/iam
@@ -644,6 +646,25 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
     resources = ["*"]
   }
 
+  # See EventBridgeSchedulerManage in deploy_permissions above -- pr-checks'
+  # terraform plan needs to read (not manage) the abandonment-metric
+  # schedule's state, confirmed live via AccessDeniedException on
+  # scheduler:GetSchedule. Same exact schedule ARN pattern, read-only subset
+  # of actions.
+  statement {
+    sid    = "EventBridgeSchedulerReadOnly"
+    effect = "Allow"
+    actions = [
+      "scheduler:GetSchedule",
+      "scheduler:ListTagsForResource",
+    ]
+    resources = flatten([
+      for env in var.environments : [
+        "arn:aws:scheduler:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:schedule/default/abandonment-metric-poll-${env}",
+      ]
+    ])
+  }
+
   statement {
     sid    = "StateBucketAccess"
     effect = "Allow"
@@ -658,9 +679,55 @@ data "aws_iam_policy_document" "pr_checks_permissions" {
   }
 }
 
+data "aws_iam_policy_document" "load_test_permissions" {
+  count = var.permissions_profile == "load_test" ? 1 : 0
+
+  statement {
+    sid    = "ConnectTestCaseExecution"
+    effect = "Allow"
+    actions = [
+      "connect:StartTestCaseExecution",
+      "connect:GetTestCaseExecutionSummary",
+    ]
+    # Could be scoped to the specific Connect instance/test-case ARN, but
+    # modules/iam doesn't currently take the instance ID/alias as an input —
+    # same deferred follow-up as ConnectManage/ConnectReadOnly above.
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "DevStateBucketReadOnly"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+    ]
+    # Scoped to dev's specific state object only, not the whole bucket and
+    # not staging/prod's state — this role is dev-only (see spec's Phase 2
+    # scope decisions) and only needs to read connect_instance_id via
+    # `terraform output`, not write or lock state.
+    resources = [
+      "arn:aws:s3:::${var.tfstate_bucket}/connect/dev/terraform.tfstate",
+    ]
+  }
+}
+
+# Each data.aws_iam_policy_document above is gated by its own `count =
+# var.permissions_profile == "..." ? 1 : 0`, so exactly one of the three
+# has count = 1 for any given profile value. Terraform's ternary operator
+# only evaluates the taken branch, so the [0] index on an untaken branch's
+# count-0 document is never actually evaluated — same pattern the
+# pre-existing 2-way ternary already relied on before this local was added.
+locals {
+  selected_policy_json = (
+    var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json :
+    var.permissions_profile == "pr_checks" ? data.aws_iam_policy_document.pr_checks_permissions[0].json :
+    data.aws_iam_policy_document.load_test_permissions[0].json
+  )
+}
+
 resource "aws_iam_policy" "this" {
   name   = coalesce(var.policy_name, var.role_name)
-  policy = var.permissions_profile == "deploy" ? data.aws_iam_policy_document.deploy_permissions[0].json : data.aws_iam_policy_document.pr_checks_permissions[0].json
+  policy = local.selected_policy_json
 }
 
 resource "aws_iam_role_policy_attachment" "this" {
