@@ -4,9 +4,7 @@
 // since there is no runtime schema validation for this prototype.
 
 export type ContactCenterDetailType =
-  | "contact.initiated"
   | "contact.transferred"
-  | "contact.disconnected"
   | "customer.lookup.completed"
   | "verification.sent"
   | "verification.completed";
@@ -21,8 +19,6 @@ export interface ContactCenterEventDetail {
   intent?: string;
   verificationStatus?: string;
   timestamp: string;
-  /** Only present on contact.disconnected events. */
-  durationSeconds?: number;
 }
 
 export interface ContactCenterEvent {
