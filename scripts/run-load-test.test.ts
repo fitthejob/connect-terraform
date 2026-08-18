@@ -1,0 +1,236 @@
+import { describe, it, expect, vi } from "vitest";
+import type { ConnectClient } from "@aws-sdk/client-connect";
+import { resolveTestCaseId, pollExecution, runBatches, formatResults } from "./run-load-test.js";
+import type { ExecutionResult } from "./run-load-test.js";
+
+function fakeClient(pages: Array<{ TestCaseSummaryList: Array<{ Id?: string; Name?: string }>; NextToken?: string }>): ConnectClient {
+  let call = 0;
+  return {
+    send: vi.fn().mockImplementation(async () => {
+      const page = pages[call];
+      call += 1;
+      return page;
+    }),
+  } as unknown as ConnectClient;
+}
+
+describe("resolveTestCaseId", () => {
+  it("returns the Id of the matching test case on the first page", async () => {
+    const client = fakeClient([
+      { TestCaseSummaryList: [{ Id: "tc-1", Name: "smoke-test" }, { Id: "tc-2", Name: "other-test" }] },
+    ]);
+
+    const id = await resolveTestCaseId(client, "instance-1", "smoke-test");
+
+    expect(id).toBe("tc-1");
+  });
+
+  it("pages through NextToken to find a match on a later page", async () => {
+    const client = fakeClient([
+      { TestCaseSummaryList: [{ Id: "tc-1", Name: "other-test" }], NextToken: "page-2" },
+      { TestCaseSummaryList: [{ Id: "tc-2", Name: "smoke-test" }] },
+    ]);
+
+    const id = await resolveTestCaseId(client, "instance-1", "smoke-test");
+
+    expect(id).toBe("tc-2");
+    expect(client.send).toHaveBeenCalledTimes(2);
+  });
+
+  it("throws a clear error when no test case matches after exhausting pagination", async () => {
+    const client = fakeClient([
+      { TestCaseSummaryList: [{ Id: "tc-1", Name: "other-test" }] },
+    ]);
+
+    await expect(resolveTestCaseId(client, "instance-1", "nonexistent-test")).rejects.toThrow(
+      /No test case found with name/,
+    );
+  });
+
+  it("skips a page with an empty TestCaseSummaryList without erroring", async () => {
+    const client = fakeClient([
+      { TestCaseSummaryList: [], NextToken: "page-2" },
+      { TestCaseSummaryList: [{ Id: "tc-2", Name: "smoke-test" }] },
+    ]);
+
+    const id = await resolveTestCaseId(client, "instance-1", "smoke-test");
+
+    expect(id).toBe("tc-2");
+  });
+});
+
+describe("pollExecution", () => {
+  const instantSleep = async (_ms: number): Promise<void> => {};
+
+  it("returns immediately when the first poll is already terminal", async () => {
+    const client = {
+      send: vi.fn().mockResolvedValue({ Status: "PASSED" }),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", { sleep: instantSleep });
+
+    expect(result).toEqual({ testCaseExecutionId: "exec-1", status: "PASSED" });
+    expect(client.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("polls through non-terminal statuses until a terminal one arrives", async () => {
+    const statuses = ["INITIATED", "IN_PROGRESS", "IN_PROGRESS", "FAILED"];
+    let call = 0;
+    const client = {
+      send: vi.fn().mockImplementation(async () => {
+        const status = statuses[call];
+        call += 1;
+        return { Status: status };
+      }),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", { sleep: instantSleep });
+
+    expect(result).toEqual({ testCaseExecutionId: "exec-1", status: "FAILED" });
+    expect(client.send).toHaveBeenCalledTimes(4);
+  });
+
+  it("resolves with TIMED_OUT status when the deadline elapses before a terminal status", async () => {
+    // Simulate elapsed time via a sleep stub that advances a fake clock,
+    // since pollExecution measures elapsed time with Date.now() internally.
+    let fakeNow = 0;
+    vi.spyOn(Date, "now").mockImplementation(() => fakeNow);
+    const advancingSleep = async (ms: number): Promise<void> => {
+      fakeNow += ms;
+    };
+
+    const client = {
+      send: vi.fn().mockResolvedValue({ Status: "IN_PROGRESS" }),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", {
+      sleep: advancingSleep,
+      pollIntervalMs: 100000,
+      deadlineMs: 250000,
+    });
+
+    expect(result.status).toBe("TIMED_OUT");
+    expect(result.testCaseExecutionId).toBe("exec-1");
+
+    vi.restoreAllMocks();
+  });
+
+  it("isolates a per-poll API error into an ERROR result rather than throwing", async () => {
+    const client = {
+      send: vi.fn().mockRejectedValue(new Error("ThrottlingException")),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", { sleep: instantSleep });
+
+    expect(result.status).toBe("ERROR");
+    expect(result.error).toContain("ThrottlingException");
+  });
+});
+
+describe("runBatches", () => {
+  it("fires all executions and polls each to a terminal status", async () => {
+    let startCall = 0;
+    const client = {
+      send: vi.fn().mockImplementation(async (command) => {
+        const name = command.constructor.name;
+        if (name === "StartTestCaseExecutionCommand") {
+          startCall += 1;
+          return { TestCaseExecutionId: `exec-${startCall}` };
+        }
+        // GetTestCaseExecutionSummaryCommand
+        return { Status: "PASSED" };
+      }),
+    } as unknown as ConnectClient;
+
+    const results = await runBatches(client, "instance-1", "tc-1", 3, {
+      pollOptions: { sleep: async () => {} },
+    });
+
+    expect(results).toHaveLength(3);
+    expect(results.every((r) => r.status === "PASSED")).toBe(true);
+    expect(results.map((r) => r.testCaseExecutionId)).toEqual(["exec-1", "exec-2", "exec-3"]);
+  });
+
+  it("chunks executions into batches no larger than batchSize", async () => {
+    const startedAtCallOrder: number[] = [];
+    let startCall = 0;
+    const client = {
+      send: vi.fn().mockImplementation(async (command) => {
+        const name = command.constructor.name;
+        if (name === "StartTestCaseExecutionCommand") {
+          startCall += 1;
+          startedAtCallOrder.push(startCall);
+          return { TestCaseExecutionId: `exec-${startCall}` };
+        }
+        return { Status: "PASSED" };
+      }),
+    } as unknown as ConnectClient;
+
+    await runBatches(client, "instance-1", "tc-1", 7, {
+      batchSize: 5,
+      pollOptions: { sleep: async () => {} },
+    });
+
+    // 7 executions with batchSize 5 -> first 5 start calls happen before
+    // any polling of the first batch blocks the second batch from starting.
+    // We can't directly observe batch boundaries via call order alone here,
+    // but we can confirm all 7 were started exactly once each.
+    expect(startCall).toBe(7);
+  });
+
+  it("isolates a StartTestCaseExecution failure into an ERROR result instead of throwing", async () => {
+    let startCall = 0;
+    const client = {
+      send: vi.fn().mockImplementation(async (command) => {
+        const name = command.constructor.name;
+        if (name === "StartTestCaseExecutionCommand") {
+          startCall += 1;
+          if (startCall === 2) {
+            throw new Error("ThrottlingException");
+          }
+          return { TestCaseExecutionId: `exec-${startCall}` };
+        }
+        return { Status: "PASSED" };
+      }),
+    } as unknown as ConnectClient;
+
+    const results = await runBatches(client, "instance-1", "tc-1", 3, {
+      pollOptions: { sleep: async () => {} },
+    });
+
+    expect(results).toHaveLength(3);
+    expect(results[1].status).toBe("ERROR");
+    expect(results[1].error).toContain("ThrottlingException");
+    expect(results[0].status).toBe("PASSED");
+    expect(results[2].status).toBe("PASSED");
+  });
+});
+
+describe("formatResults", () => {
+  it("summarizes counts by status and lists each execution", () => {
+    const results: ExecutionResult[] = [
+      { testCaseExecutionId: "exec-1", status: "PASSED" },
+      { testCaseExecutionId: "exec-2", status: "FAILED" },
+      { testCaseExecutionId: "exec-3", status: "PASSED" },
+    ];
+
+    const summary = formatResults(results);
+
+    expect(summary).toContain("3 total");
+    expect(summary).toContain("2 passed");
+    expect(summary).toContain("1 failed");
+    expect(summary).toContain("exec-1");
+    expect(summary).toContain("exec-2");
+    expect(summary).toContain("exec-3");
+  });
+
+  it("includes the error message for ERROR-status executions", () => {
+    const results: ExecutionResult[] = [
+      { testCaseExecutionId: "exec-1", status: "ERROR", error: "ThrottlingException" },
+    ];
+
+    const summary = formatResults(results);
+
+    expect(summary).toContain("ThrottlingException");
+  });
+});

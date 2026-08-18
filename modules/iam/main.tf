@@ -690,6 +690,7 @@ data "aws_iam_policy_document" "load_test_permissions" {
     actions = [
       "connect:StartTestCaseExecution",
       "connect:GetTestCaseExecutionSummary",
+      "connect:ListTestCases",
     ]
     # Could be scoped to the specific Connect instance/test-case ARN, but
     # modules/iam doesn't currently take the instance ID/alias as an input —
@@ -702,13 +703,18 @@ data "aws_iam_policy_document" "load_test_permissions" {
     effect = "Allow"
     actions = [
       "s3:GetObject",
+      "s3:ListBucket",
     ]
     # Scoped to dev's specific state object only, not the whole bucket and
     # not staging/prod's state — this role is dev-only (see spec's Phase 2
     # scope decisions) and only needs to read connect_instance_id via
-    # `terraform output`, not write or lock state.
+    # `terraform output`, not write or lock state. s3:ListBucket is a
+    # bucket-level action (no object-key ARN form exists for it), so it's
+    # granted on the bucket ARN itself even though GetObject stays scoped
+    # to the single dev state object.
     resources = [
       "arn:aws:s3:::${var.tfstate_bucket}/connect/dev/terraform.tfstate",
+      "arn:aws:s3:::${var.tfstate_bucket}",
     ]
   }
 }

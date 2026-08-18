@@ -11,7 +11,9 @@
     "generate:module-customer-lookup-flow": "tsx scripts/module-customer-lookup-flow.ts",
     "generate:module-sms-verification-flow": "tsx scripts/module-sms-verification-flow.ts",
     "validate:flow-module": "tsx scripts/validate-flow-module.ts",
-    "generate:load-test-smoke-test": "tsx scripts/load-test-smoke-test.ts"
+    "generate:load-test-smoke-test": "tsx scripts/load-test-smoke-test.ts",
+    "load-test": "tsx scripts/run-load-test.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-connect": "^3.0.0",
@@ -20,7 +22,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.23.11",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   },
   "allowScripts": {
     "esbuild@0.28.1": true

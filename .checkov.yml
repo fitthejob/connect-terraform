@@ -104,3 +104,15 @@ skip-check:
   # Deferred, not forgotten — revisit if a CMK-encryption requirement is
   # ever mandated for this account.
   - CKV_AWS_297
+  # CKV_GHA_7: "workflow_dispatch inputs MUST be empty" — flags
+  # .github/workflows/load-test.yml's test_case_name/count inputs on their
+  # mere existence, not on how they're used. The actual injection risk this
+  # check targets (an input interpolated directly into a run: script's text,
+  # e.g. `run: echo ${{ inputs.x }}`) is not present here: both inputs are
+  # only ever assigned into env: vars (INSTANCE_ID/TEST_CASE_NAME/COUNT) and
+  # referenced as shell variables ("$TEST_CASE_NAME") inside run:, which is
+  # GitHub's own documented mitigation for workflow script injection. A
+  # workflow that legitimately needs a human-supplied parameter (which test
+  # case to run, how many times) cannot satisfy "inputs MUST be empty" at
+  # all — the check has no non-empty-input-but-safe outcome to pass into.
+  - CKV_GHA_7
