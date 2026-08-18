@@ -37,7 +37,6 @@ interface NativeContactEvent {
     eventType: string;
     contactId: string;
     channel: string;
-    initiationTimestamp?: string;
     connectedToSystemTimestamp?: string;
     disconnectTimestamp?: string;
   };
@@ -106,12 +105,15 @@ async function publishCustomMetric(event: CustomEventBridgeEvent): Promise<void>
 }
 
 // Native Contact Events replacement for the old contact.initiated /
-// contact.disconnected custom events. INITIATED -> ContactsInitiated
-// (Count, same metric name as before). DISCONNECTED -> ContactDurationSeconds,
+// contact.disconnected custom events. DISCONNECTED -> ContactDurationSeconds,
 // computed from connectedToSystemTimestamp/disconnectTimestamp -- this is
 // NEW, working functionality: the old custom flow-based DurationSeconds
 // parameter was never actually populated by any flow action (see
 // scripts/main-inbound-flow.ts's removed PublishDisconnected call site).
+// INITIATED is not handled -- ContactsInitiated was dropped, since it
+// duplicated Connect's own native AWS/Connect metrics (e.g. ContactsHandled)
+// with no new information; the EventBridge rule itself filters to
+// DISCONNECTED only, so an INITIATED event should never reach this function.
 async function publishNativeMetric(event: NativeContactEvent): Promise<void> {
   const { eventType, contactId, disconnectTimestamp, connectedToSystemTimestamp } = event.detail;
 
@@ -120,23 +122,6 @@ async function publishNativeMetric(event: NativeContactEvent): Promise<void> {
     message: `Received native contact event ${eventType}`,
     detail: event.detail,
   }));
-
-  if (eventType === "INITIATED") {
-    await cloudwatch.send(
-      new PutMetricDataCommand({
-        Namespace: NAMESPACE,
-        MetricData: [
-          {
-            MetricName: "ContactsInitiated",
-            Value: 1,
-            Unit: "Count",
-            Timestamp: new Date(event.detail.initiationTimestamp ?? Date.now()),
-          },
-        ],
-      }),
-    );
-    return;
-  }
 
   if (eventType === "DISCONNECTED") {
     if (!disconnectTimestamp || !connectedToSystemTimestamp) {
