@@ -30,10 +30,12 @@ jobs:
             - name: Setup Node
               uses: actions/setup-node@v4
               with:
-                  node-version: "22"
+                  node-version: "24"
 
             - name: Install dependencies
-              run: npm install
+              run: npm ci
+              env:
+                  GITHUB_TOKEN: ${{ secrets.NPM_PACKAGES_TOKEN }}
 
             - name: OIDC Authentication
               uses: aws-actions/configure-aws-credentials@v4
@@ -59,7 +61,8 @@ jobs:
                   TEST_CASE_NAME: ${{ inputs.test_case_name }}
                   COUNT: ${{ inputs.count }}
               run: |
-                  npm run load-test -- "$INSTANCE_ID" "$TEST_CASE_NAME" "$COUNT" | tee load-test-output.txt
+                  set -o pipefail
+                  npm run load-test -- "$INSTANCE_ID" "$TEST_CASE_NAME" "$COUNT" 2>&1 | tee load-test-output.txt
 
             - name: Write step summary
               if: always()
