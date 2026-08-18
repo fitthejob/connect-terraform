@@ -12,6 +12,7 @@
     "generate:module-sms-verification-flow": "tsx scripts/module-sms-verification-flow.ts",
     "validate:flow-module": "tsx scripts/validate-flow-module.ts",
     "generate:load-test-smoke-test": "tsx scripts/load-test-smoke-test.ts",
+    "load-test": "tsx scripts/run-load-test.ts",
     "test": "vitest run"
   },
   "dependencies": {
