@@ -42,9 +42,11 @@ locals {
 # account's DEFAULT EventBridge bus (no event_bus_name set below), not
 # this module's own custom contact-center-events-{env} bus. Replaces the
 # old contact.initiated/contact.disconnected custom events. Filtered to
-# INITIATED/DISCONNECTED only -- Connect emits several other native event
-# types (QUEUED, CONNECTED_TO_AGENT, COMPLETED, CONTACT_DATA_UPDATED,
-# etc.) not currently consumed by anything in this repo.
+# DISCONNECTED only -- INITIATED was dropped (ContactsInitiated duplicated
+# Connect's own native AWS/Connect metrics, e.g. ContactsHandled, with no
+# new information). Connect emits several other native event types
+# (QUEUED, CONNECTED_TO_AGENT, COMPLETED, CONTACT_DATA_UPDATED, etc.) not
+# currently consumed by anything in this repo.
 #
 # detail-type value: confirmed correct as "Amazon Connect Contact Event" --
 # this matches the EventBridge service-event registry (events-ref-connect.html),
@@ -66,7 +68,7 @@ resource "aws_cloudwatch_event_rule" "native_contact_events" {
     source      = ["aws.connect"]
     detail-type = ["Amazon Connect Contact Event"]
     detail = {
-      eventType = ["INITIATED", "DISCONNECTED"]
+      eventType = ["DISCONNECTED"]
     }
   })
 }
