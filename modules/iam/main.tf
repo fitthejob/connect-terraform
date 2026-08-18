@@ -690,6 +690,7 @@ data "aws_iam_policy_document" "load_test_permissions" {
     actions = [
       "connect:StartTestCaseExecution",
       "connect:GetTestCaseExecutionSummary",
+      "connect:ListTestCases",
     ]
     # Could be scoped to the specific Connect instance/test-case ARN, but
     # modules/iam doesn't currently take the instance ID/alias as an input —
