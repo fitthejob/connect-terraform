@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { ConnectClient } from "@aws-sdk/client-connect";
-import { resolveTestCaseId } from "./run-load-test.js";
+import { resolveTestCaseId, pollExecution } from "./run-load-test.js";
 
 function fakeClient(pages: Array<{ TestCaseSummaryList: Array<{ Id?: string; Name?: string }>; NextToken?: string }>): ConnectClient {
   let call = 0;
@@ -55,5 +55,73 @@ describe("resolveTestCaseId", () => {
     const id = await resolveTestCaseId(client, "instance-1", "smoke-test");
 
     expect(id).toBe("tc-2");
+  });
+});
+
+describe("pollExecution", () => {
+  const instantSleep = async (_ms: number): Promise<void> => {};
+
+  it("returns immediately when the first poll is already terminal", async () => {
+    const client = {
+      send: vi.fn().mockResolvedValue({ Status: "PASSED" }),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", { sleep: instantSleep });
+
+    expect(result).toEqual({ testCaseExecutionId: "exec-1", status: "PASSED" });
+    expect(client.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("polls through non-terminal statuses until a terminal one arrives", async () => {
+    const statuses = ["INITIATED", "IN_PROGRESS", "IN_PROGRESS", "FAILED"];
+    let call = 0;
+    const client = {
+      send: vi.fn().mockImplementation(async () => {
+        const status = statuses[call];
+        call += 1;
+        return { Status: status };
+      }),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", { sleep: instantSleep });
+
+    expect(result).toEqual({ testCaseExecutionId: "exec-1", status: "FAILED" });
+    expect(client.send).toHaveBeenCalledTimes(4);
+  });
+
+  it("resolves with TIMED_OUT status when the deadline elapses before a terminal status", async () => {
+    // Simulate elapsed time via a sleep stub that advances a fake clock,
+    // since pollExecution measures elapsed time with Date.now() internally.
+    let fakeNow = 0;
+    vi.spyOn(Date, "now").mockImplementation(() => fakeNow);
+    const advancingSleep = async (ms: number): Promise<void> => {
+      fakeNow += ms;
+    };
+
+    const client = {
+      send: vi.fn().mockResolvedValue({ Status: "IN_PROGRESS" }),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", {
+      sleep: advancingSleep,
+      pollIntervalMs: 100000,
+      deadlineMs: 250000,
+    });
+
+    expect(result.status).toBe("TIMED_OUT");
+    expect(result.testCaseExecutionId).toBe("exec-1");
+
+    vi.restoreAllMocks();
+  });
+
+  it("isolates a per-poll API error into an ERROR result rather than throwing", async () => {
+    const client = {
+      send: vi.fn().mockRejectedValue(new Error("ThrottlingException")),
+    } as unknown as ConnectClient;
+
+    const result = await pollExecution(client, "instance-1", "tc-1", "exec-1", { sleep: instantSleep });
+
+    expect(result.status).toBe("ERROR");
+    expect(result.error).toContain("ThrottlingException");
   });
 });
